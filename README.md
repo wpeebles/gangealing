@@ -1,6 +1,6 @@
 ## GAN-Supervised Dense Visual Alignment &mdash; Official PyTorch Implementation
 
-[Paper](TBD) | [Project Page](https://www.wpeebles.com/gangealing) | [Video](https://youtu.be/Qa1ASS_NuzE)
+[Paper](https://arxiv.org/abs/2112.05143) | [Project Page](https://www.wpeebles.com/gangealing) | [Video](https://youtu.be/Qa1ASS_NuzE)
 
 ![Teaser image](images/elon.gif) ![Teaser image](images/catpet2teaser.gif)
 
@@ -21,7 +21,7 @@ to real images at test time automatically.
 This repository contains:
 
 * 🎱 Pre-trained GANgealing models for eight datasets, including both the Spatial Transformers and generators
-* 💥 Training code which fully support Distributed Data Parallel
+* 💥 Training code which fully supports Distributed Data Parallel
 * 🎥 Scripts for running our Mixed Reality application with pre-trained Spatial Transformers
 * ⚡ A lightning-fast CUDA implementation of splatting to generate high quality warping visualizations
 * 🎆 Several additional evaluation and visualization scripts to reproduce results from our paper and website
@@ -198,6 +198,18 @@ To train new GANgealing models, you will need pre-trained StyleGAN2(-ADA) genera
 When training a clustering model `(--num_heads > 1)`, you will need to train a cluster classifier network to use the model on real images. This is done with `train_cluster_classifier.py`; see example commands in `scripts`.
 
 Note that for the majority of experiments in our paper, we trained using 8 GPUs and a per-GPU batch size of 5.
+
+## Citation
+
+If our code or models aided your research, please cite our [paper](https://arxiv.org/abs/2112.05143):
+```
+@article{peebles2021gansupervised,
+title={GAN-Supervised Dense Visual Alignment},
+author={William Peebles and Jun-Yan Zhu and Richard Zhang and Antonio Torralba and Alexei Efros and Eli Shechtman},
+year={2021},
+journal={arXiv preprint arXiv:2112.05143},
+}
+```
 
 ## Acknowledgments
 
