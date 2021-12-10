@@ -7,7 +7,7 @@
 This repo contains training, evaluation and visualization code for the GANgealing algorithm from our GAN-Supervised Dense Visual Alignment paper. 
 
 [**GAN-Supervised Dense Visual Alignment**](https://www.wpeebles.com/gangealing)<br>
-William Peebles, Jun-Yan Zhu, Richard Zhang, Antonio Torralba, Alexei Efros<br>
+William Peebles, Jun-Yan Zhu, Richard Zhang, Antonio Torralba, Alexei Efros, Eli Shechtman<br>
 UC Berkeley, Carnegie Mellon University, Adobe Research, MIT CSAIL<br>
 
 GAN-Supervised Learning is a framework for learning discriminative models and their GAN-generated training data jointly end-to-end. 
