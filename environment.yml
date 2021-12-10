@@ -1,4 +1,4 @@
-name: gg2
+name: gg
 channels:
   - pytorch
   - plotly
