@@ -1,0 +1,26 @@
+name: gg2
+channels:
+  - pytorch
+  - plotly
+  - defaults
+dependencies:
+  - pillow
+  - pip
+  - python=3.8
+  - pytorch
+  - scipy
+  - torchvision
+  - pip:
+    - moviepy
+    - numpy
+    - opencv-python
+    - pandas
+    - plotly
+    - tensorboard>=1.15
+    - tqdm
+    - wget
+    - lmdb
+    - ray
+    - ninja
+    - scikit-learn
+    - termcolor
