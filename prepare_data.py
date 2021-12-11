@@ -392,6 +392,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    os.makedirs(os.path.dirname(args.out), exist_ok=True)
+
     # Automatically download datasets used for numerical evaluation (PCK):
     if args.cub_acsm:  # Download metadata for CUB pre-processing
         os.makedirs('data', exist_ok=True)
