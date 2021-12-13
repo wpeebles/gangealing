@@ -1,5 +1,5 @@
 file=${1}
-filename="${file%.*}"
+filename=$(basename ${file%.*})
 folder="data/video_frames/${filename}"
-mkdir ${folder}
+mkdir -p ${folder}
 ffmpeg -i "${file}" "${folder}/%07d.png"
