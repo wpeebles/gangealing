@@ -1,19 +1,21 @@
 import argparse
 import torch
 from models import get_stn, ResnetClassifier
-from utils.download import find_model
+from utils.download import find_model, PRETRAINED_TEST_HYPERPARAMS
 
 
 def base_eval_argparse():
     parser = argparse.ArgumentParser(description="Use Pre-Trained GANgealing Checkpoints")
     # loading the Spatial Transformer:
-    parser.add_argument("--ckpt", type=str, required=True, help="path to GANgealing checkpoint")
+    parser.add_argument("--ckpt", type=str, required=True, help="Path to GANgealing checkpoint, or the name of one our pre-trained models")
     parser.add_argument("--transform", default=['similarity', 'flow'], choices=['similarity', 'flow'], nargs='+', type=str, help='Which class of warps the STN is constrained to produce. Default: most expressive.')
     parser.add_argument("--flow_size", type=int, default=128, help="resolution of the flow fields learned by the STN")
     parser.add_argument("--stn_channel_multiplier", type=int, default=0.5, help='controls the number of channels in the STN\'s convolutional layers')
     parser.add_argument("--num_heads", default=1, type=int, help='Number of clusters learned by the STN')
+    parser.add_argument("--override", action='store_true', help="If specified, does NOT load our test-time hyperparameters. "
+                                                                "Only relevant if using one of our pre-trained models")
     # Spatial Transformer forward pass hyperparameters:
-    parser.add_argument("--iters", default=1, type=int, help='Number of times to recursively run the similarity STN')
+    parser.add_argument("--iters", default=1, type=int, help='Number of times to recursively run the similarity STN on its own output before feeding into the unconstrained STN')
     parser.add_argument("--padding_mode", default='border', choices=['border', 'zeros', 'reflection'], type=str, help='Padding algorithm for when the STN samples beyond image boundaries')
     parser.add_argument("--no_flip_inference", action='store_true', help='If specified, no horizontal flips will be attempted. Only affects non-clustering models (num_heads==1)')
     # loading data:
@@ -31,7 +33,11 @@ def load_stn(args, load_classifier=False, device='cuda'):
         supersize = args.crop_size
     except:
         supersize = args.real_size
-    ckpt = find_model(args.ckpt)
+    ckpt, using_our_pretrained_model = find_model(args.ckpt)
+    if using_our_pretrained_model and not args.override:  # Load our test time hyperparameters automatically
+        hyperparameters = PRETRAINED_TEST_HYPERPARAMS[args.ckpt]
+        for hyper_name, hyper_val in hyperparameters.items():
+            setattr(args, hyper_name, hyper_val)
     t_ema = get_stn(args.transform, flow_size=args.flow_size, supersize=supersize,
                     channel_multiplier=args.stn_channel_multiplier, num_heads=args.num_heads).to(device)
     t_ema.load_state_dict(ckpt['t_ema'])

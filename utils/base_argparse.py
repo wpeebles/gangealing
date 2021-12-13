@@ -6,6 +6,7 @@ def base_training_argparse():
     # Main training arguments:
     parser.add_argument("--exp-name", type=str, required=True, help="Name for experiment run (used for logging)")
     parser.add_argument("--ckpt", type=str, required=True, help="path to either a StyleGAN2(-ADA) generator checkpoint or path to a previous GANgealing checkpoint to resume training from")
+    parser.add_argument("--load_G_only", action='store_true', help="If specified, will only load g_ema from the input checkpoint (otherwise, will attempt to load the full GANgealing checkpoint)")
     parser.add_argument("--dim_latent", type=int, default=512, help="dimensionality of W-Space")
     parser.add_argument("--n_mlp", type=int, default=8, help="number of linear layers in the mapping network")
     parser.add_argument("--gen_channel_multiplier", type=int, default=2, help="channel multiplier for the generator")

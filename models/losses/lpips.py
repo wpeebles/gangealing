@@ -6,13 +6,14 @@ import torch.nn as nn
 from torch.autograd import Variable
 import models.losses.lpips_backbones as pn
 import torch.nn
-
 import numpy as np
+from utils.download import download_model
 
 
 def get_perceptual_loss(loss_fn, device):
     if loss_fn == 'vgg_ssl':
-        loss_fn_vgg = LPIPS(net='vgg', lpips=False, pnet_rand=True, pretrained_weights='checkpoints/simclr_vgg_phase150.pt').to(device)
+        download_model('simclr_vgg_phase150')  # Download the weights
+        loss_fn_vgg = LPIPS(net='vgg', lpips=False, pnet_rand=True, pretrained_weights='pretrained/simclr_vgg_phase150.pt').to(device)
         loss_fn = lambda x,y: loss_fn_vgg(x, y) / 18.0
     elif loss_fn == 'lpips':
         loss_fn = LPIPS(net='vgg').to(device)

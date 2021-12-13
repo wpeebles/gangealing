@@ -118,7 +118,7 @@ def run_gangealing_on_video(args, t, classifier):
         if not args.objects:
             colors = get_plotly_colors(points.size(1), get_colorscale(None))
 
-    # Step (3): If we want to also overlay, create
+    # Step (3): Prepare some variables if we want to display the label we're propagating over the congealed video
     if args.overlay_congealed:
         if clustering:
             congealed_points = [SpatialTransformer.unnormalize(points, args.real_size, args.real_size) for points in points_per_cluster]
@@ -254,8 +254,9 @@ if __name__ == '__main__':
     parser = base_eval_argparse()
     # Visualization hyperparameters:
     parser.add_argument("--cluster", default=None, type=int, nargs='+',
-                        help='if using a clustering model, select the cluster(s) to create visualizations for. If more '
-                             'than one is specified, tracks will be created for all specified clusters.')
+                        help='If using a clustering model, OPTIONALLY select the cluster(s) to create visualizations '
+                             'for. If more than one is specified, tracks will be created for all specified clusters. '
+                             'If you leave this as None, the cluster will be predicted dynamically for each frame.')
     parser.add_argument("--label_path", type=str, help='Path to a dense label in congealed space, formatted as '
                                                        'an RGBA image', required=True)
     parser.add_argument("--average_path", type=str, default=None, help='Path to an average image for clustering models. '
@@ -263,13 +264,15 @@ if __name__ == '__main__':
     parser.add_argument("--save_frames", action='store_true', help='If specified, saves individual frames to disk as pngs '
                                                                    'in addition to making an mp4. This takes much less '
                                                                    'GPU memory but is slower.')
-    parser.add_argument("--resolution", type=int, default=128, help='Resolution of the flow field. Making this larger '
-                                                                    'will construct denser correspondences')
+    parser.add_argument("--resolution", type=int, default=128, help='Resolution at which to load label_path. Making this '
+                                                                    'larger will propagate more pixels (i.e., find '
+                                                                    'denser correspondences)')
     parser.add_argument("--fps", type=int, default=60, help='FPS of saved videos')
     parser.add_argument("--overlay_congealed", action='store_true', help='If specified, overlays the input dense label '
                                                                          'on the congealed mp4 video')
     parser.add_argument("--objects", action='store_true', help='If specified, loads RGB values from the label '
-                                                               '(object propagation)')
+                                                               '(object propagation). Otherwise, an RGB colorscale will '
+                                                               'be created.')
     parser.add_argument("--sigma", type=float, default=1.2, help='Size of the propagated points overlaid on the video')
     parser.add_argument("--opacity", type=float, default=0.7, help='Opacity of the propagated points overlaid on the video')
     parser.add_argument("--out", type=str, default='visuals', help='directory where created videos will be saved')

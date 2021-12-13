@@ -73,7 +73,7 @@ class ComposedSTN(nn.Module):
             self.identity_flow = self.stns[transforms.index('flow')].identity_flow
         self.num_heads = self.stns[0].warp_head.num_heads
         if self.num_heads > 1:
-            self.cluster_assignments = torch.eye(self.num_heads)  # (H, H)
+            self.cluster_assignments = torch.eye(self.num_heads)  # (K, K)
 
     def forward(self, input_img, return_warp=None, return_flow=False, return_sim=False, return_intermediates=False,
                 output_resolution=None, unfold=False, iters=1, alpha=None, warp_policy='cartesian',

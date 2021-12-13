@@ -17,6 +17,9 @@ to real images at test time automatically.
 
 [![Watch the video](images/method.png)](https://www.wpeebles.com/images/gangealing_visuals/gangealing.mp4)
 
+Once trained, the average aligned image is a _template_ from which you can propagate anything. For example, by drawing 
+cartoon eyes on our average congealed cat image, you can propagate them realistically any video or image of a cat.
+
 This repository contains:
 
 * 🎱 Pre-trained GANgealing models for eight datasets, including both the Spatial Transformers and generators
@@ -49,9 +52,11 @@ If you use your environment, we recommend using the most current version of PyTo
 
 The [`applications`](applications) directory contains several files for evaluating and visualizing pre-trained GANgealing models.
 
-We provide several pre-trained GANgealing models: `bicycle`, `cat`, `celeba`, `cub`, `dog` and `tvmonitor`. We also have pre-trained checkpoints
-for our `car` and `horse` clustering models. Calling any of the files in `applications` with the `--ckpt` argument will automatically download and cache
-the weights. As described in our paper, we highly recommend using `--iters 3`, which controls the number of times the similarity Spatial Transformer is recursively evaluated, for all LSUN models to get the most accurate results (and `--iters 1` for In-The-Wild CelebA and CUB). Finally, the `--output_resolution` argument controls the size of congealed images output by the Spatial Transformer. For the highest quality results, we recommend setting this equal to `--real_size` (default value is 128).
+**Using our Pre-Trained Models:** We provide several pre-trained GANgealing models: `bicycle`, `cat`, `celeba`, `cub`, `dog` and `tvmonitor`. We also have pre-trained checkpoints
+for our `car` and `horse` clustering models. You can use any of these models by specifying them with the `--ckpt` argument; this will automatically download and cache
+the weights. The relevant hyperparameters for running the model (most importantly, the `--iters` argument) will be automatically loaded as well. If you want to use your own test time hyperparameters, add `--override` to the command; see an example [here](utils/download.py).
+
+The `--output_resolution` argument controls the size of congealed images output by the Spatial Transformer. For the highest quality results, we recommend setting this equal to the value you provide to `--real_size` (default value is 128).
 
 ### Preparing Real Data
 
@@ -89,19 +94,19 @@ python prepare_data.py --cub_acsm --out data/cub_val --size 256
 
 ![Teaser image](images/cats_cube_small.gif)
 
-`vis_correspondence.py` produces a video depicting real images being gradually aligned with our Spatial Transformer network.
+[`vis_correspondence.py`](applications/vis_correspondence.py) produces a video depicting real images being gradually aligned with our Spatial Transformer network.
 It also can be used to visualize label/object propagation:
 
 ```python
-python applications/vis_correspondence.py --ckpt cat --iters 3 --real_data_path data/lsun_cats --vis_in_stages --real_size 512 --output_resolution 512 --resolution 512 --label_path assets/masks/cat_mask.png --dset_indices 1922 2363 8558 7401 9750 7432 2105 53 1946
+python applications/vis_correspondence.py --ckpt cat --real_data_path data/lsun_cats --vis_in_stages --real_size 512 --output_resolution 512 --resolution 512 --label_path assets/masks/cat_mask.png --dset_indices 1922 2363 8558 7401 9750 7432 2105 53 1946
 ```
 
 ### Mixed Reality (Object Lenses)
 
 ![Teaser image](images/catpet2teaser.gif)
 
-`mixed_reality.py` applies a pre-trained Spatial Transformer per-frame to an input video. We include several objects
-and masks you can propagate in the `assets` folder.
+[`mixed_reality.py`](applications/mixed_reality.py) applies a pre-trained Spatial Transformer per-frame to an input video. We include several objects
+and masks you can propagate in the [`assets`](assets) folder.
 
 The first step is to prepare the video dataset. If you have the video saved as an image folder (with filenames in order based on timestamp), you can run:
 
@@ -109,7 +114,7 @@ The first step is to prepare the video dataset. If you have the video saved as a
 python prepare_data.py --path folder_of_frames --out data/my_video_dataset --pad center --size 1024
 ```
 This command will pre-process the images to square with center-cropping and resize them to 1024x1024 resolution (you can use any square resolution you like).
-You can also instead specify `--pad border` to perform border padding instead of cropping.
+You can instead specify `--pad border` to perform border padding instead of cropping.
 
 If your video is saved in `mp4`, `mov`, etc. format, we provide a script that will convert it into frames via FFmpeg:
 
@@ -119,32 +124,39 @@ If your video is saved in `mp4`, `mov`, etc. format, we provide a script that wi
 
 This will save a folder of frames in the `data/video` folder, which you can then run `prepare_data.py` on as described above.
 
-Now that the data are set up, we can run GANgealing on the video. For example, this will propagate a cartoon face via our LSUN Cats
+Now we can run GANgealing on the video. For example, this will propagate a cartoon face via our LSUN Cats
 model:
 
 ```python
-python -m torch.distributed.launch --nproc_per_node=NUM_GPUS --master_port=6085 applications/mixed_reality.py --ckpt cat --iters 3 --objects --label_path assets/objects/cat/cat_cartoon.png --sigma 0.3 --opacity 1 --real_size 1024 --resolution 8192 --out video_materials_full/cats --real_data_path path_to_my_video --no_flip_inference
+python -m torch.distributed.launch --nproc_per_node=NUM_GPUS --master_port=6085 applications/mixed_reality.py --ckpt cat --objects --label_path assets/objects/cat/cat_cartoon.png --sigma 0.3 --opacity 1 --real_size 1024 --resolution 8192 --real_data_path path_to_my_video --no_flip_inference
 ```
 
-This will efficiently parallelize the evaluation of the video over `NUM_GPUS`. If you are propagating to a long video/ are running out of memory, you can add the `--save_frames` argument which should use significantly less memory (at the cost of speed). The `--objects` argument pulls propagated RGB values from the RGBA image `--label_path` points to. If you omit `--objects`, only the alpha channel of `--label_path` will be used, and a colorscale will be created (useful for visualizing tracking when propagating masks). For models that do not benefit much from flipping (e.g., LSUN Cats, TVs, and CelebA), we recommend using the `--no_flip_inference` argument to disable unnecessary flipping.
+This will efficiently parallelize the evaluation of the video over `NUM_GPUS`. Here is a quick overview of the arguments you can use with this file (see [mixed_reality.py](applications/mixed_reality.py) for full details):
+* `--save_frames` can be specified to significantly reduce GPU memory usage (at the cost of speed)
+* `--label_path` points to the RGBA `png` file containing the object/mask you are propagating
+* `--objects` will propagate RGB values from your `label_path` image. If you omit this argument, only the alpha channel of the `label_path` image will be used, and an RGB colorscale will be created (useful for visualizing tracking when propagating masks)
+* `--no_flip_inference` disables flipping, which is recommended for models that do not benefit much from flipping (e.g., `cat`, `celeba`, `tvmonitor`)
+* `--resolution` controls the number of pixels propagated. When using `mixed_reality.py`to propagate objects, we recommend making this value very large (e.g., `8192` for a 1K resolution video)
+* `--sigma` controls the radius of splatted pixels
+* `--opacity` controls the opacity of splatted pixels
 
 #### Creating New Object Lenses
 
 To propagate your own custom object, you need to create a new RGBA image saved as a `png`. You can take the
 pre-computed average congealed image for your model of interest (located in [`assets/averages`](assets/averages)) and load it
-into an image editor like Photoshop. Then, overlay your object of interest on the template and export the object as an RGBA `png` image.
-Pass your new object with the `--label_path` argument like above.
+into an image editor like Photoshop. Then, overlay your custom object on the template and export the object as an RGBA `png` image.
+Pass the `png` file to the `--label_path` argument like above.
 
 We recommend saving the object at a high resolution for the highest quality results (e.g., 4K resolution or higher if you are propagating to a 1K resolution video).
 
 ### PCK-Transfer Evaluation
 
-Our repo includes a fast implementation of PCK-Transfer in `pck.py` that supports multi-GPU evaluation. First, make sure you've set up either SPair-71K or CUB as described earlier. You can evaluate PCK-Transfer as follows:
+Our repo includes a fast implementation of PCK-Transfer in [`pck.py`](applications/pck.py) that supports multi-GPU evaluation. First, make sure you've set up either SPair-71K or CUB as described earlier. You can evaluate PCK-Transfer as follows:
 
 To evaluate SPair-71K (e.g., `cats` category):
 
 ```python
-python -m torch.distributed.launch --nproc_per_node=NUM_GPUS --master_port=6085 applications/pck.py --ckpt cat --iters 3 --real_data_path data/spair_cats_test --real_size 256
+python -m torch.distributed.launch --nproc_per_node=NUM_GPUS --master_port=6085 applications/pck.py --ckpt cat --real_data_path data/spair_cats_test --real_size 256
 ```
 
 To evaluate PCK on CUB:
@@ -159,15 +171,16 @@ Note that different methods compute PCK in slightly different ways depending on 
 
 ### Learned Pre-Processing of Datasets
 
-Finally, we also include a script that applies a pre-trained Spatial Transformer to align and filter a dataset (e.g., for downstream GAN training).
+Finally, we also include a script that applies a pre-trained Spatial Transformer to align and filter an input dataset (e.g., for downstream GAN training): [congeal_dataset.py](applications/congeal_dataset.py)
 
-To do this, you will need two versions of your dataset: (1) a pre-processed version (via `prepare_data.py` as described above) which will be used to quickly compute flow smoothness scores, and (2) a raw, unprocessed version of the dataset stored in LMDB format. We'll explain how to create this second unprocessed copy below.
+To use this, you will need two versions of your unaligned input dataset: (1) a pre-processed version (via `prepare_data.py` as described above), and (2) a raw, unprocessed version of the dataset stored in LMDB format. We'll explain how to create this second unprocessed copy below. 
+The first (pre-processed) dataset will be used to quickly compute flow scores in batch mode. The second (unprocessed) dataset will be fed into the Spatial Transformer to obtain the highest quality output images possible.
 
 The first recommended step is to compute _flow smoothness scores_ for each image in the dataset. As described in our paper, these scores
 do a good job at identifying (1) images the Spatial Transformer fails on and (2) images that are impossible to align to the learned target mode. The scores can be computed as follows:
 
 ```python
-python -m torch.distributed.launch --nproc_per_node=NUM_GPUS --master_port=6085 applications/flow_scores.py --ckpt cat --iters 3 --real_data_path my_dataset --real_size S --no_flip_inference
+python -m torch.distributed.launch --nproc_per_node=NUM_GPUS --master_port=6085 applications/flow_scores.py --ckpt cat --real_data_path my_dataset --real_size S --no_flip_inference
 ```
 , where `my_dataset` should be created with our `prepare_data.py` script as described above. This will cache a tensor of flow scores at `my_dataset/flow_scores.pt`.
 
@@ -179,22 +192,24 @@ python prepare_data.py --path folder_of_frames --out data/new_lmdb_data --pad no
 Finally, you can generate a new, aligned and filtered dataset:
 
 ```python
-python -m torch.distributed.launch --nproc_per_node=NUM_GPUS --master_port=6085 applications/congeal_dataset.py --ckpt cat --iters 3 --real_data_path data/new_lmdb_data --out data/my_new_aligned_dataset --real_size 0 --flow_scores my_dataset/flow_scores.pt --fraction_retained 0.25 --output_resolution S
+python -m torch.distributed.launch --nproc_per_node=NUM_GPUS --master_port=6085 applications/congeal_dataset.py --ckpt cat --real_data_path data/new_lmdb_data --out data/my_new_aligned_dataset --real_size 0 --flow_scores my_dataset/flow_scores.pt --fraction_retained 0.25 --output_resolution O
 ```
-, where `S` is the desired output resolution of the dataset and the `--fraction_retained` argument controls the percentage of images that will be retained based on flow scores. There are some other arguments you can adjust---see documentation in `congeal_dataset.py` for details.
+, where `O` is the desired output resolution of the aligned dataset and the `--fraction_retained` argument controls the percentage of images that will be retained based on flow scores. There are some other arguments you can adjust; see documentation in [`congeal_dataset.py`](applications/congeal_dataset.py) for details.
 
 
 ### Using Pre-Trained Clustering Models
 
-The clustering models are usable in most places the unimodal models are (with a few current exceptions, such as `flow_scores.py` and `congeal_dataset.py`). To load the clustering models, add `--num_heads K` (for our pre-trained models, `K=4`). There are also several files that let you propagate from a chosen cluster with the `--cluster <cluster_index>` argument (e.g., `mixed_reality.py` and `vis_correspondence.py`). Please refer to the documentation in these files for details.
+The clustering models are usable in most places the unimodal models are (with a few current exceptions, such as `flow_scores.py` and `congeal_dataset.py`). To load the clustering models, add `--num_heads K` (we do this automatically if you're using one of our pre-trained models). There are also several files that let you propagate from a chosen cluster with the `--cluster cluster_index` argument (e.g., `mixed_reality.py` and `vis_correspondence.py`). Please refer to the documentation in those files for details.
 
 ## Training
 
-(We will add additional training scripts in the coming days!)
+We include several training scripts [here](scripts/training). Running these scripts will automatically download pre-trained StyleGAN2 generator weights (included in our GANgealing checkpoints) and begin training. There are lots of training hyperparameters you can change; see the documentation [here](utils/base_argparse.py).
 
-To train new GANgealing models, you will need pre-trained StyleGAN2(-ADA) generator weights from the [rosinality repo](https://github.com/rosinality/stylegan2-pytorch). We also include generator checkpoints in all of our pre-trained GANgealing weights. Please refer to the `scripts` folder for examples of training commands, and see `train.py` for details.
+**Training with Custom StyleGANs:** If you would like to run GANgealing with a custom StyleGAN2(-ADA) checkpoint, convert it using the [`convert_weight.py`](https://github.com/rosinality/stylegan2-pytorch/blob/master/convert_weight.py) script in the [rosinality repository](https://github.com/rosinality/stylegan2-pytorch), and then pass it to `--ckpt` when calling `train.py`. If you're using an architecture other than the `config-f` StyleGAN2 (e.g., the `auto` config for StyleGAN2-ADA), make sure to specify values for `--n_mlp`, `--dim_latent`, `--gen_channel_multiplier` and `--num_fp16_res` so the correct generator architecture is instantiated.
 
-When training a clustering model `(--num_heads > 1)`, you will need to train a cluster classifier network to use the model on real images. This is done with `train_cluster_classifier.py`; see example commands in `scripts`.
+**Perceptual Loss:** You can choose between two perceptual losses: LPIPS (`--loss_fn lpips`) or a self-supervised VGG pre-trained with SimCLR on ImageNet-1K (`--loss_fn vgg_ssl`). The weights will be automatically downloaded for both. Note that we recommend higher `--tv_weight` values when using `lpips`. We found 1000 to be a good default for `vgg_ssl` and 2500 a good default for `lpips`.
+
+**Clustering:** When training a clustering model (`--num_heads > 1`), you will need to train a cluster classifier network afterwards to use the model on real images. This is done with [`train_cluster_classifier.py`](train_cluster_classifier.py); you can find an example command [here](scripts/training/lsun_cars_cluster_classifier.sh).
 
 Note that for the majority of experiments in our paper, we trained using 8 GPUs and a per-GPU batch size of 5.
 

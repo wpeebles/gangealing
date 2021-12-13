@@ -137,26 +137,9 @@ def extend_object_border(img, mask, max_pixel_radius=45):
 if __name__ == '__main__':
     # Simple example usage on GPU:
     device = 'cuda'  # also can run in cpu mode instead
-    # x = torch.randn(5, 3, 144, 201, device=device)
-    # y = torch.randn_like(x)
-    # mask = torch.rand(5, 1, 144, 201, device=device)
+    x = torch.randn(5, 3, 144, 201, device=device)
+    y = torch.randn_like(x)
+    mask = torch.rand(5, 1, 144, 201, device=device)
     blender = LaplacianBlender(levels=5).to(device)
-    # b = blender(x, y, mask)
-    # print(b.size())
-
-    from PIL import Image
-    x0 = Image.open('fp1.png').convert('RGB')
-    x1 = Image.open('fp0.png').convert('RGB')
-    m = Image.open('fm.png')
-    import numpy as np
-    x0 = torch.from_numpy(np.asarray(x0)).float().permute(2, 0, 1).unsqueeze_(0).div(255.0).add(-0.5).mul(2.0).to(device)
-    x1 = torch.from_numpy(np.asarray(x1)).float().permute(2, 0, 1).unsqueeze_(0).div(255.0).add(-0.5).mul(2.0).to(device)
-    m = torch.from_numpy(np.asarray(m)).float().permute(2, 0, 1).unsqueeze_(0).div(255.0).to(device)[:, 0:1]
-    x1 = x1 * m
-    x1 = extend_object_border(x1, m)
-    b = blender(x0, x1, m)
-    from torchvision.utils import save_image
-    # save_image(ext, 'e.png', normalize=True, range=(-1, 1))
-    # save_image(hm, 'm.png', normalize=True, range=(0, 1), nrow=4)
-    save_image(x1, 'e.png', normalize=True, range=(-1, 1))
-    save_image(b, 'b.png', normalize=True, range=(-1, 1))
+    b = blender(x, y, mask)
+    print(b.size())

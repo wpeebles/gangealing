@@ -16,6 +16,7 @@ from utils.vis_tools.training_vis import GANgealingWriter, create_training_visua
 from utils.distributed import all_gather, get_rank, setup_distributed, reduce_loss_dict, get_world_size, primary
 from utils.base_argparse import base_training_argparse
 from utils.annealing import DecayingCosineAnnealingWarmRestarts, lr_cycle_iters, get_psi_annealing_fn
+from utils.download import find_model
 
 
 def save_state_dict(ckpt_name, generator, t_module, t_ema, t_optim, t_sched, ll_module, ll_optim, ll_sched, args):
@@ -215,9 +216,11 @@ if __name__ == "__main__":
 
     # Load pre-trained generator (and optionally resume from a GANgealing checkpoint):
     print(f"Loading model from {args.ckpt}")
-    ckpt = torch.load(args.ckpt, map_location=lambda storage, loc: storage)
+    ckpt, _ = find_model(args.ckpt)
     generator.load_state_dict(ckpt["g_ema"])  # NOTE: We load g_ema as generator since G is frozen!
     try:  # Restore from full checkpoint, including the optimizer
+        if args.load_G_only:  # Don't attempt to load GANgealing checkpoint; jump straight to the except block
+            raise KeyError  # This doesn't actually raise an error
         stn.load_state_dict(ckpt["t"])
         t_ema.load_state_dict(ckpt["t_ema"])
         t_optim.load_state_dict(ckpt["t_optim"])
@@ -225,7 +228,7 @@ if __name__ == "__main__":
         ll.load_state_dict(ckpt["ll"])
         ll_optim.load_state_dict(ckpt["ll_optim"])
         ll_sched.load_state_dict(ckpt["ll_sched"])
-    except KeyError:
+    except KeyError:  # Initialize the target mode c (ll)
         print('Only G_EMA has been loaded from checkpoint. Other nets are random!')
         n_pca = 1000 if args.debug else 1000000
         with torch.no_grad():

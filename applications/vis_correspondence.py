@@ -163,7 +163,7 @@ def get_patch_size(length):
     # grid to the predicted congealing grid. When length is small, pixels can move a lot from one timestep to the next,
     # and hence the window over which we search for nearest neighbors needs to increase commensurately. This function
     # is a basic heuristic to make sure patch_size isn't too small.
-    patch_size = math.ceil(5 * max(1, 240 / length))  # heuristic formula to increase patch_size as length decreases
+    patch_size = math.ceil(9 * max(1, 240 / length))  # heuristic formula to increase patch_size as length decreases
     if patch_size % 2 == 0:  # make sure patch_size is odd
         patch_size += 1
     return patch_size

@@ -3,29 +3,51 @@ from torchvision.datasets.utils import download_and_extract_archive, download_fi
 import os
 import shutil
 import torch
+from utils.distributed import primary, synchronize
 
-# These are the pre-trained GANgealing checkpoints we currently have available for download:
-VALID_MODELS = {'bicycle', 'car', 'cat', 'cat_ssl_mix6', 'celeba', 'cub', 'dog', 'horse', 'tvmonitor'}
+
+# These are the pre-trained GANgealing checkpoints we currently have available for download (and the SSL VGG network)
+VALID_MODELS = {'bicycle', 'car', 'cat', 'cat_ssl_mix6', 'celeba', 'cub', 'dog', 'horse', 'tvmonitor',
+                'simclr_vgg_phase150'}
+
+# These are the default testing hyperparameters which we used for all models. They will be automatically
+# loaded into the argparser whenever you use one of our pre-trained models. If you want to change any of these,
+# add "--override" to your command. E.g., "--iters 7 --override".
+# Note that we use the same padding_mode at test time as we did for training. We use iters=3 for the especially hard
+# datasets (LSUN) and 1 otherwise.
+PRETRAINED_TEST_HYPERPARAMS = \
+    {
+        'bicycle':       {'padding_mode': 'reflection', 'iters': 3},
+        'car':           {'padding_mode': 'reflection', 'iters': 3, 'num_heads': 4},
+        'cat':           {'padding_mode': 'border',    'iters': 3},
+        'cat_ssl_mix6':  {'padding_mode': 'border',    'iters': 3},
+        'celeba':        {'padding_mode': 'border',    'iters': 1},
+        'cub':           {'padding_mode': 'border',    'iters': 1},
+        'dog':           {'padding_mode': 'border',    'iters': 3},
+        'horse':         {'padding_mode': 'reflection', 'iters': 3, 'num_heads': 4},
+        'tvmonitor':     {'padding_mode': 'reflection', 'iters': 3},
+    }
 
 
 def find_model(model_name):
     if model_name in VALID_MODELS:
-        return download_model(model_name)
+        using_pretrained_model = True
+        return download_model(model_name), using_pretrained_model
     else:
-        return torch.load(model_name, map_location=lambda storage, loc: storage)
+        using_pretrained_model = False
+        return torch.load(model_name, map_location=lambda storage, loc: storage), using_pretrained_model
 
 
 def download_model(model_name):
     assert model_name in VALID_MODELS
     model_name = f'{model_name}.pt'  # add extension
     local_path = f'pretrained/{model_name}'
-    if os.path.isfile(local_path):
-        model = torch.load(local_path, map_location=lambda storage, loc: storage)
-    else:
+    if not os.path.isfile(local_path) and primary():  # download (only on primary process)
         web_path = f'http://efrosgans.eecs.berkeley.edu/gangealing/pretrained/{model_name}'
         download_url(web_path, 'pretrained')
         local_path = f'pretrained/{model_name}'
-        model = torch.load(local_path, map_location=lambda storage, loc: storage)
+    synchronize()  # Wait for the primary process to finish downloading the checkpoint
+    model = torch.load(local_path, map_location=lambda storage, loc: storage)
     return model
 
 
@@ -45,12 +67,12 @@ def download_cub(to_path):
     # Downloads the CUB-200-2011 dataset
     cub_dir = f'{to_path}/CUB_200_2011'
     if not os.path.isdir(cub_dir):
-        zip_path = f'{cub_dir}.zip'
+        tgz_path = f'{cub_dir}.tgz'
         print(f'Downloading CUB_200_2011 to {to_path}')
         cub_file_id = '1hbzc_P1FuxMkcabkgn9ZKinBwW683j45'
         download_file_from_google_drive(cub_file_id, to_path)
-        shutil.move(f'{to_path}/{cub_file_id}', zip_path)
-        extract_archive(zip_path, remove_finished=True)
+        shutil.move(f'{to_path}/{cub_file_id}', tgz_path)
+        extract_archive(tgz_path, remove_finished=True)
     else:
         print('Found pre-existing CUB directory')
     return cub_dir

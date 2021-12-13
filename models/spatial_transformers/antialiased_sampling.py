@@ -17,7 +17,10 @@ class Warp(nn.Module):
 
 
 class MipmapWarp(nn.Module):
-    """Module for applying spatial transforms with mipmap anti-aliasing. Code from Tim Brooks."""
+    """
+    Module for applying spatial transforms with mipmap anti-aliasing.
+    Code from Tim Brooks.
+    """
 
     def __init__(self, max_num_levels: int = 8):
         """Initializes MipmapWarp class.

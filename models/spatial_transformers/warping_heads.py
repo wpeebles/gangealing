@@ -37,22 +37,22 @@ class SimilarityHead(nn.Module):
     def make_affine_matrix(rot, scale, shift_x, shift_y):
         # This function takes the raw output of the parameter regression network and converts them into
         # an affine matrix representing the predicted similarity transformation.
-        # Inputs each of size (N, H), H = number of heads/clusters
-        N, H = rot.size()
+        # Inputs each of size (N, K), K = number of heads/clusters
+        N, K = rot.size()
         rot = torch.tanh(rot) * math.pi
         scale = torch.exp(scale)
         cos_rot = torch.cos(rot)
         sin_rot = torch.sin(rot)
         matrix = [scale * cos_rot, -scale * sin_rot, shift_x,
                   scale * sin_rot, scale * cos_rot, shift_y]
-        matrix = torch.stack(matrix, dim=2)  # (N, H, 6)
-        matrix = matrix.reshape(N, H, 2, 3)  # (N, H, 2, 3)
+        matrix = torch.stack(matrix, dim=2)  # (N, K, 6)
+        matrix = matrix.reshape(N, K, 2, 3)  # (N, K, 2, 3)
         return matrix
 
     def make_3x3(self, M):
-        # M should be size (N, H, 2, 3)
-        one_hot = self.one_hot.expand(M.size(0), M.size(1), 1, 3)  # (N, H, 1, 3)
-        M_3x3 = torch.cat([M, one_hot], 2)  # (N, H, 3, 3)
+        # M should be size (N, K, 2, 3)
+        one_hot = self.one_hot.expand(M.size(0), M.size(1), 1, 3)  # (N, K, 1, 3)
+        M_3x3 = torch.cat([M, one_hot], 2)  # (N, K, 3, 3)
         return M_3x3
 
     def forward(self, img, features, output_resolution=None, alpha=None, base_warp=None,
@@ -116,11 +116,11 @@ class SimilarityHead(nn.Module):
             raise NotImplementedError
 
         params = torch.split(params, split_size, dim=1)  # length-(num_warp_params) list of (N, split_size) tensors
-        matrix = self.make_affine_matrix(*params)  # (N, H, 2, 3)
+        matrix = self.make_affine_matrix(*params)  # (N, K, 2, 3)
         if base_warp is not None:
             if base_warp.dim() == 3:
                 base_warp = base_warp.unsqueeze(1)
-            matrix = base_warp @ self.make_3x3(matrix)  # (N, H, 2, 3)
+            matrix = base_warp @ self.make_3x3(matrix)  # (N, K, 2, 3)
         if alpha is not None:  # NOTE: Currently, the same alpha is used for each head within a batch
             I = torch.eye(2, 3, device=matrix.device)[None, None]
             matrix = I.lerp(matrix, alpha[:, None, None, None])

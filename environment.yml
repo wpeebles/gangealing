@@ -7,7 +7,7 @@ dependencies:
   - pillow
   - pip
   - python=3.8
-  - pytorch
+  - pytorch=1.9.0
   - scipy
   - torchvision
   - pip:

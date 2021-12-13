@@ -178,15 +178,14 @@ def pck_transfer(t, loader, alpha=0.1, num_pairs=10000, device='cuda', quiet=Tru
 if __name__ == '__main__':
     parser = base_eval_argparse()
     # PCK-Transfer hyperparameters:
-    parser.add_argument("--alphas", default=[0.1, 0.05, 0.01], type=float, nargs='+', help='Thresholds at which to optionally monitor PCK')
+    parser.add_argument("--alphas", default=[0.1, 0.05, 0.01], type=float, nargs='+', help='Thresholds at which to evaluate PCK')
     parser.add_argument("--num_pck_pairs", default=None, type=int, help='Number of pairs to evaluate (None=infer)')
     parser.add_argument("--transfer_both_ways", action='store_true', help='If specified, evaluates A --> B transfers '
                                                                           'as well as B --> A')
     parser.add_argument("--vis_transfer", action='store_true', help='If specified, saves a png visualizing key point '
                                                                     'transfers')
     parser.add_argument("--num_bootstrap", default=0, type=int, help='If greater than zero, also run bootstrapping to '
-                                                                     'estimate standard deviations. We use 100 in the '
-                                                                     'paper where we report error bars')
+                                                                     'estimate standard deviations.')
     parser.add_argument("--out", default='visuals', type=str, help='Directory to save visualizations')
     args = parser.parse_args()
     args.distributed = setup_distributed(args.local_rank)
