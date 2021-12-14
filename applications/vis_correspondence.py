@@ -449,7 +449,7 @@ if __name__ == '__main__':
                              'real_size.')
     parser.add_argument("--resolution", type=int, default=256, help='Resolution of the flow field. Making this larger '
                                                                     'will construct denser correspondences')
-    parser.add_argument("--dset_indices", type=int, nargs='+', default=list(range(64)),
+    parser.add_argument("--dset_indices", type=int, nargs='+', default=list(range(4)),
                         help='Select the images (dataset indices) to create visualizations for')
     parser.add_argument("--flow_scores", default=None, type=str,
                         help='Path to pre-computed flow scores to filter dataset (see flow_scores.py for more info)')
@@ -462,7 +462,7 @@ if __name__ == '__main__':
                                                                '(object propagation)')
     parser.add_argument("--sigma", type=float, default=1.2, help='Size of the propagated points overlaid on the video')
     parser.add_argument("--opacity", type=float, default=0.7, help='Opacity of the propagated points overlaid on the video')
-    parser.add_argument("--splat_batch", type=int, default=300, help='Batch size for the splatting operation')
+    parser.add_argument("--splat_batch", type=int, default=100, help='Batch size for the splatting operation')
     parser.add_argument("--out", type=str, default='visuals', help='directory where created videos will be saved')
     args = parser.parse_args()
     if args.num_heads > 1:  # Only applies to clustering models:

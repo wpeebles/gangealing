@@ -16,7 +16,7 @@ import os
 
 from glob import glob
 from utils.CUB_data_utils import square_bbox, perturb_bbox, acsm_crop
-from utils.download import download_spair, download_cub, download_cub_metadata
+from utils.download import download_spair, download_lsun, download_cub, download_cub_metadata
 
 
 # When an image is mirrored, any key points with left/right distinction need to be swapped.
@@ -288,7 +288,8 @@ def resize_worker(img_file, sizes, pad, format, lmdb_path):
 
 
 def prepare(
-    env, path, out, n_worker, sizes=(128, 256, 512, 1024), pad='zero', format='jpeg', input_is_lmdb=False, pattern='*.png', spair_category=None, spair_split=None, cub_acsm=False
+    env, path, out, n_worker, sizes=(128, 256, 512, 1024), pad='zero', format='jpeg', input_is_lmdb=False,
+        pattern='*.png', max_images=None, spair_category=None, spair_split=None, cub_acsm=False
 ):
     if input_is_lmdb:
         lmdb_path = path
@@ -296,6 +297,8 @@ def prepare(
         print('Loading LMDB keys (this might take a bit)...')
         with input_env.begin(write=False) as inp_txn:
             key_list = list(inp_txn.cursor().iternext(values=False))  # https://stackoverflow.com/a/65663873
+        if max_images is not None:
+            key_list = key_list[:max_images]
         num_files = len(key_list)
         print(f'LMDB keys loaded! Found {num_files} keys.')
         files = [(i, key, None) for i, key in enumerate(key_list)]
@@ -308,7 +311,9 @@ def prepare(
                                             category=spair_category, split=spair_split)
         else:  # Load images from a folder (or hierarchy of folders); bboxes = None
             files, bboxes = load_image_folder(path, pattern)
-
+        if max_images is not None:
+            files = files[:max_images]
+            bboxes = bboxes[:max_images]
         num_files = len(files)
         print(f'Found {num_files} files')
         print(f'Example file being loaded: {files[0]}')
@@ -338,7 +343,8 @@ def prepare(
     print(f'Final dataset size: {total}')
 
 
-def create_dataset(out, path, size, pad='zero', n_worker=8, format='jpeg', input_is_lmdb=False, pattern='*.png', spair_category=None, spair_split=None, cub_acsm=False):
+def create_dataset(out, path, size, pad='zero', n_worker=8, format='jpeg', input_is_lmdb=False, pattern='*.png',
+                   max_images=None, spair_category=None, spair_split=None, cub_acsm=False):
     size = str(size)
 
     sizes = [int(s.strip()) for s in size.split(",")]
@@ -347,7 +353,7 @@ def create_dataset(out, path, size, pad='zero', n_worker=8, format='jpeg', input
 
     with lmdb.open(out, map_size=2048 ** 4, readahead=False) as env:
         prepare(env, path, out, n_worker, sizes=sizes, pad=pad, format=format,
-                input_is_lmdb=input_is_lmdb, pattern=pattern,
+                input_is_lmdb=input_is_lmdb, pattern=pattern, max_images=max_images,
                 spair_category=spair_category, spair_split=spair_split, cub_acsm=cub_acsm)
 
 
@@ -379,13 +385,18 @@ if __name__ == "__main__":
                         help='If true, path input points to an LMDB dataset. This is useful for, e.g., creating '
                              'LSUN datasets. If you use this you can ignore --pattern')
     parser.add_argument("--pattern", type=str, default='*.png', help='Specify the pattern glob uses to find images')
+    parser.add_argument("--max_images", type=int, default=None, help='Maximum number of images to include in '
+                                                                     'final dataset (default: include all)')
 
-    # Special arguments for loading SPair-71K and CUB for PCK evaluation purposes. If you use these options below,
-    # you can ignore --input_is_lmdb and --pattern above.
+    # Special arguments for loading SPair-71K and CUB for PCK evaluation purposes (and also LSUN). If you use these
+    # options below, you can ignore --input_is_lmdb, --path and --pattern above.
     parser.add_argument("--spair_category", default=None, type=str, choices=list(SPAIR_PERMUTATIONS.keys()),
-                        help='If true, constructs the SPair-71K dataset for the specified category')
+                        help='If specified, constructs the SPair-71K dataset for the specified category')
     parser.add_argument("--spair_split", default='test', choices=['trn', 'val', 'test'], type=str,
                         help='The split of SPair that will be constructed (only used if --spair_category is specified)')
+    parser.add_argument("--lsun_category", default=None, type=str,
+                        help='If specified, constructs the LSUN dataset for the specified category '
+                             '(may take a while to download!)')
     parser.add_argument("--cub_acsm", action='store_true',
                         help='If true, constructs the CUB dataset. This will use the same pre-processing and filtering '
                              'as the CUB validation split from the ACSM paper.')
@@ -394,7 +405,7 @@ if __name__ == "__main__":
 
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
 
-    # Automatically download datasets used for numerical evaluation (PCK):
+    # Automatically download some datasets:
     if args.cub_acsm:  # Download metadata for CUB pre-processing
         os.makedirs('data', exist_ok=True)
         download_cub_metadata('data')
@@ -407,9 +418,13 @@ if __name__ == "__main__":
         os.makedirs('data', exist_ok=True)
         args.path = download_spair('data')
         args.pad = 'border'
+    elif args.lsun_category is not None:  # Download LSUN category automatically
+        os.makedirs('data', exist_ok=True)
+        args.path = download_lsun('data', args.lsun_category)
+        args.input_is_lmdb = True
     else:
         assert args.path is not None
 
     create_dataset(args.out, args.path, args.size, args.pad, args.n_worker, args.format,
-                   args.input_is_lmdb, args.pattern, args.spair_category, args.spair_split,
+                   args.input_is_lmdb, args.pattern, args.max_images, args.spair_category, args.spair_split,
                    args.cub_acsm)

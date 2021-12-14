@@ -32,11 +32,12 @@ This codebase should be mostly ready to go, but we may make a few tweaks over De
 
 ## Setup
 
-First, download the repo:
+First, download the repo and add it to your `PYTHONPATH`:
 
 ```bash
 git clone git@github.com:wpeebles/gangealing.git
 cd gangealing
+export PYTHONPATH="${PYTHONPATH}:${PWD}"
 ```
 
 We provide an [`environment.yml`](environment.yml) file that can be used to create a Conda environment:
@@ -46,7 +47,7 @@ conda env create -f environment.yml
 conda activate gg
 ```
 
-If you use your environment, we recommend using the most current version of PyTorch.
+If you use your environment, we currently recommend using PyTorch `1.9.0`.
 
 ## Running Pre-Trained Models
 
@@ -64,10 +65,16 @@ We use LMDBs for storing data. You can use [`prepare_data.py`](prepare_data.py) 
 required for training.
 
 
-**LSUN:** Download and unzip the relevant category from [here](http://dl.yf.io/lsun/objects/) (e.g., `cat`). You can pre-process the data with the following command:
+**LSUN:** The following command will automatically download and pre-process the first 10,000 images from LSUN Cats (you can change `--lsun_category` and `--max_images`):
 
 ```python
-python prepare_data.py --input_is_lmdb --path path_to_downloaded_folder --out data/lsun_cats --pad center --size 512
+python prepare_data.py --input_is_lmdb --lsun_category cat --out data/lsun_cats --size 512 --max_images 10000
+```
+
+If you previously downloaded the LSUN LMDB yourself (e.g., at `path_to_lsun_download`), you can instead use the following command:
+
+```python
+python prepare_data.py --input_is_lmdb --path path_to_lsun_download --out data/lsun_cats --size 512 --max_images 10000
 ```
 
 **Image Folders:** For any dataset where you have all images in a single folder, you can pre-process them with:
@@ -122,7 +129,7 @@ If your video is saved in `mp4`, `mov`, etc. format, we provide a script that wi
 ./process_video.sh path_to_video
 ```
 
-This will save a folder of frames in the `data/video` folder, which you can then run `prepare_data.py` on as described above.
+This will save a folder of frames in the `data/video_frames` folder, which you can then run `prepare_data.py` on as described above.
 
 Now we can run GANgealing on the video. For example, this will propagate a cartoon face via our LSUN Cats
 model:
@@ -131,7 +138,7 @@ model:
 python -m torch.distributed.launch --nproc_per_node=NUM_GPUS --master_port=6085 applications/mixed_reality.py --ckpt cat --objects --label_path assets/objects/cat/cat_cartoon.png --sigma 0.3 --opacity 1 --real_size 1024 --resolution 8192 --real_data_path path_to_my_video --no_flip_inference
 ```
 
-This will efficiently parallelize the evaluation of the video over `NUM_GPUS`. Here is a quick overview of the arguments you can use with this file (see [mixed_reality.py](applications/mixed_reality.py) for full details):
+This will efficiently parallelize the evaluation of the video over `NUM_GPUS`. Here is a quick overview of the arguments you can use with this file (see [`mixed_reality.py`](applications/mixed_reality.py) for full details):
 * `--save_frames` can be specified to significantly reduce GPU memory usage (at the cost of speed)
 * `--label_path` points to the RGBA `png` file containing the object/mask you are propagating
 * `--objects` will propagate RGB values from your `label_path` image. If you omit this argument, only the alpha channel of the `label_path` image will be used, and an RGB colorscale will be created (useful for visualizing tracking when propagating masks)
@@ -171,7 +178,7 @@ Note that different methods compute PCK in slightly different ways depending on 
 
 ### Learned Pre-Processing of Datasets
 
-Finally, we also include a script that applies a pre-trained Spatial Transformer to align and filter an input dataset (e.g., for downstream GAN training): [congeal_dataset.py](applications/congeal_dataset.py)
+Finally, we also include a script that applies a pre-trained Spatial Transformer to align and filter an input dataset (e.g., for downstream GAN training): [`congeal_dataset.py`](applications/congeal_dataset.py)
 
 To use this, you will need two versions of your unaligned input dataset: (1) a pre-processed version (via `prepare_data.py` as described above), and (2) a raw, unprocessed version of the dataset stored in LMDB format. We'll explain how to create this second unprocessed copy below. 
 The first (pre-processed) dataset will be used to quickly compute flow scores in batch mode. The second (unprocessed) dataset will be fed into the Spatial Transformer to obtain the highest quality output images possible.

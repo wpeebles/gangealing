@@ -63,6 +63,16 @@ def download_spair(to_path):
     return spair_dir
 
 
+def download_lsun(to_path, category):
+    lsun_dir = f'{to_path}/{category}'
+    if not os.path.isdir(lsun_dir):
+        lsun_url = f'http://dl.yf.io/lsun/objects/{category}.zip'
+        download_and_extract_archive(lsun_url, to_path, remove_finished=True)
+    else:
+        print(f'Found pre-existing lsun {category} directory')
+    return lsun_dir
+
+
 def download_cub(to_path):
     # Downloads the CUB-200-2011 dataset
     cub_dir = f'{to_path}/CUB_200_2011'
