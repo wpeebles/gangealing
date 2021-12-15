@@ -1,14 +1,14 @@
 ## GAN-Supervised Dense Visual Alignment &mdash; Official PyTorch Implementation
 
-[Paper](https://arxiv.org/abs/2112.05143) | [Project Page](https://www.wpeebles.com/gangealing) | [Video](https://youtu.be/Qa1ASS_NuzE)
+### [Paper](https://arxiv.org/abs/2112.05143) | [Project Page](https://www.wpeebles.com/gangealing) | [Video](https://youtu.be/Qa1ASS_NuzE)
 
-![Teaser image](images/elon.gif) ![Teaser image](images/catpet2teaser.gif)
+![Teaser image](images/snowpuppy.gif) ![Teaser image](images/elon.gif) ![Teaser image](images/catpet2teaser.gif)
 
-This repo contains training, evaluation, and visualization code for the GANgealing algorithm from our GAN-Supervised Dense Visual Alignment paper.
+This repo contains training, evaluation, and visualization code for the GANgealing algorithm from our GAN-Supervised Dense Visual Alignment paper. Please see our [project page](https://www.wpeebles.com/gangealing) for high quality results.
 
-[**GAN-Supervised Dense Visual Alignment**](https://www.wpeebles.com/gangealing)<br>
-William Peebles, Jun-Yan Zhu, Richard Zhang, Antonio Torralba, Alexei Efros, Eli Shechtman<br>
-UC Berkeley, Carnegie Mellon University, Adobe Research, MIT CSAIL<br>
+> [**GAN-Supervised Dense Visual Alignment**](https://www.wpeebles.com/gangealing)<br>
+> [William Peebles](https://www.wpeebles.com), [Jun-Yan Zhu](https://www.cs.cmu.edu/~junyanz/), [Richard Zhang](http://richzhang.github.io/), [Antonio Torralba](https://groups.csail.mit.edu/vision/torralbalab/), [Alexei Efros](https://people.eecs.berkeley.edu/~efros/), [Eli Shechtman](https://research.adobe.com/person/eli-shechtman/)<br>
+> UC Berkeley, Carnegie Mellon University, Adobe Research, MIT CSAIL<br>
 
 GAN-Supervised Learning is a method for learning discriminative models and their GAN-generated training data jointly end-to-end. We apply our framework to the dense visual alignment problem. Inspired by the classic Congealing method, our GANgealing algorithm trains a Spatial Transformer to
 warp random samples from a GAN trained on unaligned data to a common, jointly-learned target mode. The target mode is
@@ -59,7 +59,7 @@ the weights. The relevant hyperparameters for running the model (most importantl
 
 The `--output_resolution` argument controls the size of congealed images output by the Spatial Transformer. For the highest quality results, we recommend setting this equal to the value you provide to `--real_size` (default value is 128).
 
-### Preparing Real Data
+## Preparing Real Data
 
 We use LMDBs for storing data. You can use [`prepare_data.py`](prepare_data.py) to pre-process input datasets. Note that setting-up real data is not
 required for training.
@@ -97,9 +97,10 @@ python prepare_data.py --spair_category cat --spair_split test --out data/spair_
 python prepare_data.py --cub_acsm --out data/cub_val --size 256
 ```
 
-### Congealing and Dense Correspondence Visualization
+## Congealing and Dense Correspondence Visualization
 
-![Teaser image](images/cats_cube_small.gif)
+![Teaser image](images/cats_cube_light_mode.gif#gh-light-mode-only)
+![Teaser image](images/cats_cube_dark_mode.gif#gh-dark-mode-only)
 
 [`vis_correspondence.py`](applications/vis_correspondence.py) produces a video depicting real images being gradually aligned with our Spatial Transformer network.
 It also can be used to visualize label/object propagation:
@@ -108,9 +109,15 @@ It also can be used to visualize label/object propagation:
 python applications/vis_correspondence.py --ckpt cat --real_data_path data/lsun_cats --vis_in_stages --real_size 512 --output_resolution 512 --resolution 512 --label_path assets/masks/cat_mask.png --dset_indices 1922 2363 8558 7401 9750 7432 2105 53 1946
 ```
 
-### Mixed Reality (Object Lenses)
-
-![Teaser image](images/catpet2teaser.gif)
+## Mixed Reality (Object Lenses)
+![Teaser image](images/catpet2teaser.gif) ![Teaser image](images/goldens.gif) ![Teaser image](images/bike_ornament.gif)
+<table cellpadding="0" cellspacing="0" >
+  <tr>
+    <td  align="center">Dense Tracking<br> <img src="images/snowpuppy_track.gif" width=240px></td>
+    <td  align="center">Object Propagation<br> <img src="images/snowpuppy_object.gif" width=240px></td>
+    <td  align="center">Congealed Video<br> <img src="images/snowpuppy_congealed.gif" width=240px></td>
+  </tr>
+</table>
 
 [`mixed_reality.py`](applications/mixed_reality.py) applies a pre-trained Spatial Transformer per-frame to an input video. We include several objects
 and masks you can propagate in the [`assets`](assets) folder.
@@ -147,7 +154,7 @@ This will efficiently parallelize the evaluation of the video over `NUM_GPUS`. H
 * `--sigma` controls the radius of splatted pixels
 * `--opacity` controls the opacity of splatted pixels
 
-#### Creating New Object Lenses
+### Creating New Object Lenses
 
 To propagate your own custom object, you need to create a new RGBA image saved as a `png`. You can take the
 pre-computed average congealed image for your model of interest (located in [`assets/averages`](assets/averages)) and load it
@@ -156,7 +163,7 @@ Pass the `png` file to the `--label_path` argument like above.
 
 We recommend saving the object at a high resolution for the highest quality results (e.g., 4K resolution or higher if you are propagating to a 1K resolution video).
 
-### PCK-Transfer Evaluation
+## PCK-Transfer Evaluation
 
 Our repo includes a fast implementation of PCK-Transfer in [`pck.py`](applications/pck.py) that supports multi-GPU evaluation. First, make sure you've set up either SPair-71K or CUB as described earlier. You can evaluate PCK-Transfer as follows:
 
@@ -176,7 +183,7 @@ You can also add the `--vis_transfer` argument to save a visualization of keypoi
 
 Note that different methods compute PCK in slightly different ways depending on dataset. For CUB, the protocol used by past methods is to sample 10,000 random pairs from the validation set and evaluate bidirectional transfers. For SPair, fixed pairs are always used and the transfers are one-way. Our implementation of PCK supports both of these protocols to ensure accurate comparisons against baselines.
 
-### Learned Pre-Processing of Datasets
+## Learned Pre-Processing of Datasets
 
 Finally, we also include a script that applies a pre-trained Spatial Transformer to align and filter an input dataset (e.g., for downstream GAN training): [`congeal_dataset.py`](applications/congeal_dataset.py)
 
@@ -203,8 +210,33 @@ python -m torch.distributed.launch --nproc_per_node=NUM_GPUS --master_port=6085 
 ```
 , where `O` is the desired output resolution of the aligned dataset and the `--fraction_retained` argument controls the percentage of images that will be retained based on flow scores. There are some other arguments you can adjust; see documentation in [`congeal_dataset.py`](applications/congeal_dataset.py) for details.
 
+## Using the Spatial Transformer in Your Code
 
-### Using Pre-Trained Clustering Models
+Here's an example of loading and running our pre-trained unimodal Spatial Transformers to align an input image:
+
+```python
+from models import get_stn
+from utils.download import download_model, PRETRAINED_TEST_HYPERPARAMS
+from utils.vis_tools.helpers import load_pil, save_image
+
+model_class = 'cat'  # choose the class you want to use
+resolution = 512  # resolution the input image will be resized to (can be any power of 2)
+image_path = 'my_image.jpeg'  # path to image you want to align
+
+input_img = load_pil(image_path, resolution)  # load, resize to (resolution, resolution) and normalize to [-1, 1]
+ckpt = download_model(model_class)  # download model weights
+stn = get_stn(['similarity', 'flow'], flow_size=128, supersize=resolution).to('cuda')  # instantiate STN
+stn.load_state_dict(ckpt['t_ema'])  # load weights
+test_kwargs = PRETRAINED_TEST_HYPERPARAMS[model_class]  # load the test-time hyperparameters
+aligned_img = stn.forward_with_flip(input_img, output_resolution=resolution, **test_kwargs)  # forward pass through the STN
+save_image(aligned_img, 'output.png', normalize=True, range=(-1, 1))  # save to disk
+
+```
+
+If your input image isn't square you may want to pad or crop it beforehand. Also, `stn` supports batch mode, so `input_img` can be an `(N, C, H, W)` tensor containing multiple images, in which case `aligned_image` will also be `(N, C, H, W)`.
+
+
+## Using Pre-Trained Clustering Models
 
 The clustering models are usable in most places the unimodal models are (with a few current exceptions, such as `flow_scores.py` and `congeal_dataset.py`). To load the clustering models, add `--num_heads K` (we do this automatically if you're using one of our pre-trained models). There are also several files that let you propagate from a chosen cluster with the `--cluster cluster_index` argument (e.g., `mixed_reality.py` and `vis_correspondence.py`). Please refer to the documentation in those files for details.
 
