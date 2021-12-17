@@ -38,12 +38,12 @@ def find_model(model_name):
         return torch.load(model_name, map_location=lambda storage, loc: storage), using_pretrained_model
 
 
-def download_model(model_name):
+def download_model(model_name, online_prefix='pretrained'):
     assert model_name in VALID_MODELS
     model_name = f'{model_name}.pt'  # add extension
     local_path = f'pretrained/{model_name}'
     if not os.path.isfile(local_path) and primary():  # download (only on primary process)
-        web_path = f'http://efrosgans.eecs.berkeley.edu/gangealing/pretrained/{model_name}'
+        web_path = f'http://efrosgans.eecs.berkeley.edu/gangealing/{online_prefix}/{model_name}'
         download_url(web_path, 'pretrained')
         local_path = f'pretrained/{model_name}'
     synchronize()  # Wait for the primary process to finish downloading the checkpoint
@@ -98,3 +98,15 @@ def download_cub_metadata(to_path):
     else:
         print('Found pre-existing CUB metadata')
     return acsm_val_mat_path
+
+
+def download_video(video_name):
+    valid_videos = {'elon', 'snowpuppy', 'cutecat'}
+    assert video_name in valid_videos
+    local_path = f'data/{video_name}'
+    if not os.path.isdir(local_path) and primary():  # download (only on primary process)
+        web_path = f'http://efrosgans.eecs.berkeley.edu/gangealing/video/{video_name}'
+        os.makedirs(local_path)
+        download_url(f'{web_path}/data.mdb', local_path)
+        download_url(f'{web_path}/lock.mdb', local_path)
+    return local_path
