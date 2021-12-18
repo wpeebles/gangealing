@@ -100,12 +100,12 @@ def download_cub_metadata(to_path):
     return acsm_val_mat_path
 
 
-def download_video(video_name):
+def download_video(video_name, online_prefix='video_1024'):
     valid_videos = {'elon', 'snowpuppy', 'cutecat'}
     assert video_name in valid_videos
     local_path = f'data/{video_name}'
     if not os.path.isdir(local_path) and primary():  # download (only on primary process)
-        web_path = f'http://efrosgans.eecs.berkeley.edu/gangealing/video/{video_name}'
+        web_path = f'http://efrosgans.eecs.berkeley.edu/gangealing/{online_prefix}/{video_name}'
         os.makedirs(local_path)
         download_url(f'{web_path}/data.mdb', local_path)
         download_url(f'{web_path}/lock.mdb', local_path)
