@@ -1,6 +1,6 @@
 ## GAN-Supervised Dense Visual Alignment &mdash; Official PyTorch Implementation
 
-### [Paper](https://arxiv.org/abs/2112.05143) | [Project Page](https://www.wpeebles.com/gangealing) | [Video](https://youtu.be/Qa1ASS_NuzE) | Mixed Reality Playground [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)]((https://colab.research.google.com/drive/1toeCGn-Z4tCMcuon1FZPB4Vr9A5rp4sx?usp=sharing))
+### [Paper](https://arxiv.org/abs/2112.05143) | [Project Page](https://www.wpeebles.com/gangealing) | [Video](https://youtu.be/Qa1ASS_NuzE) | Mixed Reality Playground [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1toeCGn-Z4tCMcuon1FZPB4Vr9A5rp4sx?usp=sharing)
 
 ![Teaser image](images/snowpuppy.gif) ![Teaser image](images/elon.gif) ![Teaser image](images/catpet2teaser.gif)
 
@@ -24,7 +24,7 @@ This repository contains:
 
 * 🎱 Pre-trained GANgealing models for eight datasets, including both the Spatial Transformers and generators
 * 💥 Training code which fully supports Distributed Data Parallel
-* 🎥 Scripts and a self-contained [Colab notebook](https://colab.research.google.com/drive/1toeCGn-Z4tCMcuon1FZPB4Vr9A5rp4sx?usp=sharing) for running mixed reality with our pre-trained Spatial Transformers
+* 🎥 Scripts and a self-contained [Colab notebook](https://colab.research.google.com/drive/1toeCGn-Z4tCMcuon1FZPB4Vr9A5rp4sx?usp=sharing) for running mixed reality with our Spatial Transformers
 * ⚡ A lightning-fast CUDA implementation of splatting to generate high-quality warping visualizations
 * 🚀 An implementation of anti-aliased grid sampling useful for Spatial Transformers (thanks Tim Brooks!)
 * 🎆 Several additional evaluation and visualization scripts to reproduce results from our paper and website
@@ -110,7 +110,7 @@ It also can be used to visualize label/object propagation:
 python applications/vis_correspondence.py --ckpt cat --real_data_path data/lsun_cats --vis_in_stages --real_size 512 --output_resolution 512 --resolution 512 --label_path assets/masks/cat_mask.png --dset_indices 1922 2363 8558 7401 9750 7432 2105 53 1946
 ```
 
-## Mixed Reality (Object Lenses) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)]((https://colab.research.google.com/drive/1toeCGn-Z4tCMcuon1FZPB4Vr9A5rp4sx?usp=sharing))
+## Mixed Reality (Object Lenses) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1toeCGn-Z4tCMcuon1FZPB4Vr9A5rp4sx?usp=sharing)
 ![Teaser image](images/catpet2teaser.gif) ![Teaser image](images/goldens.gif) ![Teaser image](images/bike_ornament.gif)
 <table cellpadding="0" cellspacing="0" >
   <tr>
