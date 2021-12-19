@@ -4,8 +4,8 @@ import os
 
 
 def setup_distributed():
-    local_rank = int(os.environ['LOCAL_RANK'])
-    n_gpu = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
+    local_rank = int(os.environ['LOCAL_RANK']) if 'LOCAL_RANK' in os.environ else 0
+    n_gpu = int(os.environ['WORLD_SIZE']) if 'WORLD_SIZE' in os.environ else 1
     is_distributed = n_gpu > 1
     if is_distributed:
         torch.cuda.set_device(local_rank)
