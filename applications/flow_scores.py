@@ -74,6 +74,6 @@ if __name__ == '__main__':
     parser = base_eval_argparse()
     args = parser.parse_args()
     assert args.num_heads == 1, 'Clustering not currently supported for flow_scores.py'
-    args.distributed = setup_distributed(args.local_rank)
+    args.distributed = setup_distributed()
     t_ema = load_stn(args)
     compute_flow_scores(args, t_ema)

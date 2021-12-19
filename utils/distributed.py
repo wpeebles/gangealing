@@ -3,7 +3,8 @@ from torch import distributed as dist
 import os
 
 
-def setup_distributed(local_rank):
+def setup_distributed():
+    local_rank = int(os.environ['LOCAL_RANK'])
     n_gpu = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
     is_distributed = n_gpu > 1
     if is_distributed:

@@ -18,7 +18,6 @@ def base_training_argparse():
     parser.add_argument("--gen_size", default=256, type=int, help='resolution of fake images produced by the generator')
     parser.add_argument("--iter", type=int, default=800000, help="total training iterations")
     parser.add_argument("--batch", type=int, default=5, help="batch size per-GPU")
-    parser.add_argument("--local_rank", type=int, default=0, help="local rank for distributed training")
     parser.add_argument("--debug", action='store_true', help='If specified, quickly begins training for faster debugging')
 
     # GANgealing hyperparameters:

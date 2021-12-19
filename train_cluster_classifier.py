@@ -148,7 +148,7 @@ if __name__ == "__main__":
     args.n_mean = 200 if args.debug else args.n_mean
     args.vis_batch_size //= args.num_heads  # Keep visualization batch size reasonable for clustering models
     # Setup distributed PyTorch and create results directory:
-    args.distributed = setup_distributed(args.local_rank)
+    args.distributed = setup_distributed()
     results_path = os.path.join(args.results, args.exp_name)
     if primary():
         writer = GANgealingWriter(results_path)
@@ -203,7 +203,8 @@ if __name__ == "__main__":
 
     # Move cluster classifier to DDP if distributed training is enabled:
     if args.distributed:
-        classifier = nn.parallel.DistributedDataParallel(classifier, device_ids=[args.local_rank], output_device=args.local_rank, broadcast_buffers=False)
+        local_rank = int(os.environ["LOCAL_RANK"])
+        classifier = nn.parallel.DistributedDataParallel(classifier, device_ids=[local_rank], output_device=local_rank, broadcast_buffers=False)
 
     # Setup real data for visualizations:
     loader = img_dataloader(args.real_data_path, shuffle=False, batch_size=args.vis_batch_size, resolution=args.real_size)

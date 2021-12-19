@@ -125,6 +125,6 @@ if __name__ == '__main__':
                              'dataset.')
     args = parser.parse_args()
     assert args.num_heads == 1, 'Clustering not currently supported for congeal_dataset.py'
-    args.distributed = setup_distributed(args.local_rank)
+    args.distributed = setup_distributed()
     t_ema = load_stn(args)
     align_and_filter_dataset(args, t_ema)

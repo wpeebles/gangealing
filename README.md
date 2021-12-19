@@ -23,7 +23,7 @@ cartoon eyes on our average congealed cat image, you can propagate them realisti
 This repository contains:
 
 * 🎱 Pre-trained GANgealing models for eight datasets, including both the Spatial Transformers and generators
-* 💥 Training code which fully supports Distributed Data Parallel
+* 💥 Training code which fully supports Distributed Data Parallel and the torchrun API
 * 🎥 Scripts and a self-contained [Colab notebook](https://colab.research.google.com/drive/1JkUjhTjR8MyLxwarJjqnh836BICfocTu?usp=sharing) for running mixed reality with our Spatial Transformers
 * ⚡ A lightning-fast CUDA implementation of splatting to generate high-quality warping visualizations
 * 🚀 An implementation of anti-aliased grid sampling useful for Spatial Transformers (thanks Tim Brooks!)
@@ -36,7 +36,7 @@ This codebase should be mostly ready to go, but we may make a few tweaks over De
 First, download the repo and add it to your `PYTHONPATH`:
 
 ```bash
-git clone git@github.com:wpeebles/gangealing.git
+git clone https://github.com/wpeebles/gangealing.git
 cd gangealing
 export PYTHONPATH="${PYTHONPATH}:${PWD}"
 ```
@@ -48,7 +48,9 @@ conda env create -f environment.yml
 conda activate gg
 ```
 
-If you use your environment, we currently recommend using PyTorch `1.9.0`.
+This will install PyTorch with a recent version of CUDA/cuDNN. To install CUDA 10.2/cuDNN 7.6.5 specifically, you can use [`environment_cu102.yml`](environment_cu102.yml) in the above command. See [below](#note-on-cudnncuda-versions) for details on performance differences between CUDA/cuDNN versions.
+
+If you use your own environment, you'll need a recent version of PyTorch (1.10.1+).
 
 ## Running Pre-Trained Models
 
@@ -143,7 +145,7 @@ Now we can run GANgealing on the video. For example, this will propagate a carto
 model:
 
 ```python
-python -m torch.distributed.launch --nproc_per_node=NUM_GPUS --master_port=6085 applications/mixed_reality.py --ckpt cat --objects --label_path assets/objects/cat/cat_cartoon.png --sigma 0.3 --opacity 1 --real_size 1024 --resolution 8192 --real_data_path path_to_my_video --no_flip_inference
+torchrun --nproc_per_node=NUM_GPUS applications/mixed_reality.py --ckpt cat --objects --label_path assets/objects/cat/cat_cartoon.png --sigma 0.3 --opacity 1 --real_size 1024 --resolution 8192 --real_data_path path_to_my_video --no_flip_inference
 ```
 
 This will efficiently parallelize the evaluation of the video over `NUM_GPUS`. Here is a quick overview of the arguments you can use with this file (see [`mixed_reality.py`](applications/mixed_reality.py) for full details):
@@ -171,13 +173,13 @@ Our repo includes a fast implementation of PCK-Transfer in [`pck.py`](applicatio
 To evaluate SPair-71K (e.g., `cats` category):
 
 ```python
-python -m torch.distributed.launch --nproc_per_node=NUM_GPUS --master_port=6085 applications/pck.py --ckpt cat --real_data_path data/spair_cats_test --real_size 256
+torchrun --nproc_per_node=NUM_GPUS applications/pck.py --ckpt cat --real_data_path data/spair_cats_test --real_size 256
 ```
 
 To evaluate PCK on CUB:
 
 ```python
-python -m torch.distributed.launch --nproc_per_node=NUM_GPUS --master_port=6085 applications/pck.py --ckpt cub --real_data_path data/cub_val --real_size 256 --num_pck_pairs 10000 --transfer_both_ways
+torchrun --nproc_per_node=NUM_GPUS applications/pck.py --ckpt cub --real_data_path data/cub_val --real_size 256 --num_pck_pairs 10000 --transfer_both_ways
 ```
 
 You can also add the `--vis_transfer` argument to save a visualization of keypoint transfer.
@@ -195,7 +197,7 @@ The first recommended step is to compute _flow smoothness scores_ for each image
 do a good job at identifying (1) images the Spatial Transformer fails on and (2) images that are impossible to align to the learned target mode. The scores can be computed as follows:
 
 ```python
-python -m torch.distributed.launch --nproc_per_node=NUM_GPUS --master_port=6085 applications/flow_scores.py --ckpt cat --real_data_path my_dataset --real_size S --no_flip_inference
+torchrun --nproc_per_node=NUM_GPUS applications/flow_scores.py --ckpt cat --real_data_path my_dataset --real_size S --no_flip_inference
 ```
 , where `my_dataset` should be created with our `prepare_data.py` script as described above. This will cache a tensor of flow scores at `my_dataset/flow_scores.pt`.
 
@@ -207,7 +209,7 @@ python prepare_data.py --path folder_of_frames --out data/new_lmdb_data --pad no
 Finally, you can generate a new, aligned and filtered dataset:
 
 ```python
-python -m torch.distributed.launch --nproc_per_node=NUM_GPUS --master_port=6085 applications/congeal_dataset.py --ckpt cat --real_data_path data/new_lmdb_data --out data/my_new_aligned_dataset --real_size 0 --flow_scores my_dataset/flow_scores.pt --fraction_retained 0.25 --output_resolution O
+torchrun --nproc_per_node=NUM_GPUS applications/congeal_dataset.py --ckpt cat --real_data_path data/new_lmdb_data --out data/my_new_aligned_dataset --real_size 0 --flow_scores my_dataset/flow_scores.pt --fraction_retained 0.25 --output_resolution O
 ```
 , where `O` is the desired output resolution of the aligned dataset and the `--fraction_retained` argument controls the percentage of images that will be retained based on flow scores. There are some other arguments you can adjust; see documentation in [`congeal_dataset.py`](applications/congeal_dataset.py) for details.
 
@@ -252,6 +254,9 @@ We include several training scripts [here](scripts/training). Running these scri
 **Clustering:** When training a clustering model (`--num_heads > 1`), you will need to train a cluster classifier network afterwards to use the model on real images. This is done with [`train_cluster_classifier.py`](train_cluster_classifier.py); you can find an example command [here](scripts/training/lsun_cars_cluster_classifier.sh).
 
 Note that for the majority of experiments in our paper, we trained using 8 GPUs and a per-GPU batch size of 5.
+
+## Note on cuDNN/CUDA Versions
+We have found on some GPUs that GANgealing training and inference runs faster at low batch sizes with CUDA 10.2/cuDNN 7.6.5 compared to CUDA 11/cuDNN 8. For example, on RTX 6000 GPUs with a per-GPU batch size of 5, training is 3x faster with CUDA 10.2/cuDNN 7.6.5. However, for high per-GPU batch sizes (32+), CUDA 11/CuDNN 8 seems to be faster. We have also observed very good performance with CUDA 11 on A100 GPUs using a per-GPU batch size of 5. We include two environments in this repo: [`environment.yml`](environment.yml) will install recent versions of CUDA/cuDNN whereas [`environment_cu102.yml`](environment_cu102.yml) will install CUDA 10.2/cuDNN 7.6.5. See [here](https://github.com/pytorch/pytorch/issues/47908) for more discussion.
 
 ## Citation
 

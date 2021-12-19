@@ -110,3 +110,12 @@ def download_video(video_name, online_prefix='video_1024'):
         download_url(f'{web_path}/data.mdb', local_path)
         download_url(f'{web_path}/lock.mdb', local_path)
     return local_path
+
+
+def download_lpips():
+    local_path = f'pretrained/lpips_vgg_v0.1.pt'
+    if not os.path.isfile(local_path) and primary():  # download (only on primary process)
+        web_path = 'https://github.com/richzhang/PerceptualSimilarity/raw/master/lpips/weights/v0.1/vgg.pth'
+        download_url(web_path, 'pretrained')
+        shutil.move('pretrained/vgg.pth', local_path)
+    synchronize()  # Wait for the primary process to finish downloading

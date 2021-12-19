@@ -278,7 +278,7 @@ if __name__ == '__main__':
     parser.add_argument("--out", type=str, default='visuals', help='directory where created videos will be saved')
     args = parser.parse_args()
     os.makedirs(args.out, exist_ok=True)
-    args.distributed = setup_distributed(args.local_rank)
+    args.distributed = setup_distributed()
     # The classifier is optional and only used with clustering models:
     t_ema, classifier = load_stn(args, load_classifier=True)
     if args.num_heads == 1:

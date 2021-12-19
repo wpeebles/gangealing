@@ -469,7 +469,7 @@ if __name__ == '__main__':
         assert args.cluster is not None, 'Must add --cluster <index> to select a cluster to visualize'
     os.makedirs(args.out, exist_ok=True)
     create_average_visualization = args.n_mean > 0
-    args.distributed = setup_distributed(args.local_rank) if create_average_visualization else False
+    args.distributed = setup_distributed() if create_average_visualization else False
     # The classifier is optional and only used with clustering models:
     t_ema, classifier = load_stn(args, load_classifier=True)
     if primary():  # This part is fast on a single GPU, no need for distributed:

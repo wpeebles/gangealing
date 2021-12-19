@@ -117,10 +117,7 @@ def train(args, loader, generator, stn, t_ema, ll, t_optim, ll_optim, t_sched, l
         tv_loss = total_variation_loss(delta_flow) if args.tv_weight > 0 else zero
         flow_idty_loss = flow_identity_loss(delta_flow) if args.flow_identity_weight > 0 else zero
 
-        loss_dict = {}
-        loss_dict["p"] = perceptual_loss
-        loss_dict["tv"] = tv_loss
-        loss_dict["f"] = flow_idty_loss
+        loss_dict = {"p": perceptual_loss, "tv": tv_loss, "f": flow_idty_loss}
 
         stn.zero_grad()
         ll.zero_grad()
@@ -182,7 +179,7 @@ if __name__ == "__main__":
     args.n_mean = 200 if args.debug else args.n_mean
     args.vis_batch_size //= args.num_heads  # Keep visualization batch size reasonable for clustering models
     # Setup distributed PyTorch and create results directory:
-    args.distributed = setup_distributed(args.local_rank)
+    args.distributed = setup_distributed()
     args.clustering = args.num_heads > 1
     results_path = os.path.join(args.results, args.exp_name)
     if primary():
@@ -257,8 +254,9 @@ if __name__ == "__main__":
 
     # Move models to DDP if distributed training is enabled:
     if args.distributed:
-        stn = nn.parallel.DistributedDataParallel(stn, device_ids=[args.local_rank], output_device=args.local_rank, broadcast_buffers=False)
-        ll = nn.parallel.DistributedDataParallel(ll, device_ids=[args.local_rank], output_device=args.local_rank, broadcast_buffers=False)
+        local_rank = int(os.environ["LOCAL_RANK"])
+        stn = nn.parallel.DistributedDataParallel(stn, device_ids=[local_rank], output_device=local_rank, broadcast_buffers=False)
+        ll = nn.parallel.DistributedDataParallel(ll, device_ids=[local_rank], output_device=local_rank, broadcast_buffers=False)
 
     # Setup real data for visualizations (optional):
     loader = img_dataloader(args.real_data_path, shuffle=False, batch_size=args.vis_batch_size, resolution=args.real_size, infinite=False) if args.real_data_path is not None else None

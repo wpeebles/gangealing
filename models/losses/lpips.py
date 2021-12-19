@@ -7,7 +7,7 @@ from torch.autograd import Variable
 import models.losses.lpips_backbones as pn
 import torch.nn
 import numpy as np
-from utils.download import download_model
+from utils.download import download_model, download_lpips
 
 
 def get_perceptual_loss(loss_fn, device):
@@ -16,6 +16,7 @@ def get_perceptual_loss(loss_fn, device):
         loss_fn_vgg = LPIPS(net='vgg', lpips=False, pnet_rand=True, pretrained_weights='pretrained/simclr_vgg_phase150.pt').to(device)
         loss_fn = lambda x,y: loss_fn_vgg(x, y) / 18.0
     elif loss_fn == 'lpips':
+        download_lpips()  # Download LPIPS weights
         loss_fn = LPIPS(net='vgg').to(device)
     else:
         raise NotImplementedError
@@ -121,7 +122,7 @@ def upsample(in_tens, out_HW=(64,64)): # assumes scale factor is same for H and 
 # Learned perceptual metric
 class LPIPS(nn.Module):
     def __init__(self, pretrained=True, net='alex', version='0.1', lpips=True, spatial=False, 
-        pnet_rand=False, pnet_tune=False, use_dropout=True, model_path='checkpoints/lpips_vgg_v0.1.pt', eval_mode=True, verbose=True, pretrained_weights=None):
+        pnet_rand=False, pnet_tune=False, use_dropout=True, model_path='pretrained/lpips_vgg_v0.1.pt', eval_mode=True, verbose=True, pretrained_weights=None):
         # lpips - [True] means with linear calibration on top of base network
         # pretrained - [True] means load linear weights
 
@@ -172,7 +173,7 @@ class LPIPS(nn.Module):
 
                 if(verbose):
                     print('Loading model from: %s'%model_path)
-                self.load_state_dict(torch.load(model_path, map_location='cpu'), strict=False)          
+                self.load_state_dict(torch.load(model_path, map_location='cpu'), strict=False)
 
         if(eval_mode):
             self.eval()

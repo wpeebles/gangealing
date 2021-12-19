@@ -23,7 +23,6 @@ def base_eval_argparse():
     parser.add_argument("--real_size", default=256, type=int, help='resolution of real images')
     parser.add_argument("--batch", type=int, default=50, help="batch size per-GPU for evaluation")
     parser.add_argument("--seed", default=0, type=int, help='Random seed for evaluation')
-    parser.add_argument("--local_rank", type=int, default=0, help="local rank for distributed training")
 
     return parser
 

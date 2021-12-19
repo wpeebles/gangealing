@@ -8,6 +8,7 @@ dependencies:
   - pip
   - python=3.8
   - pytorch>=1.10.1
+  - cudatoolkit=10.2
   - scipy
   - torchvision
   - pip:

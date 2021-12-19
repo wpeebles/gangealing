@@ -188,7 +188,7 @@ if __name__ == '__main__':
                                                                      'estimate standard deviations.')
     parser.add_argument("--out", default='visuals', type=str, help='Directory to save visualizations')
     args = parser.parse_args()
-    args.distributed = setup_distributed(args.local_rank)
+    args.distributed = setup_distributed()
     t_ema = load_stn(args)
     run_pck_transfer(args, t_ema)
     if args.num_bootstrap > 0:  # bootstrap standard deviations
