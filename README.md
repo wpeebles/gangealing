@@ -172,7 +172,7 @@ We recommend saving the object at a high resolution for the highest quality resu
 the congealed (aligned) output images to disk. Basic usage:
 
 ```python
-python applications/propagate_to_images.py --ckpt cat --real_data_path data/lsun_cats --real_size 512
+python applications/propagate_to_images.py --ckpt cat --real_data_path data/lsun_cats --real_size 512 --dset_indices 1922 2363 8558 7401 9750 7432 2105 53 1946
 ```
 
 **Edit Propagation:** Add `--label_path assets/objects/cat/cat_vr_headset.png --objects -s 0.3 -o 1 --resolution 4096` to propagate a VR headset to the cat images.

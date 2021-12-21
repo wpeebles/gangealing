@@ -25,7 +25,7 @@ def get_flow_scores(args, path, t):
 @torch.inference_mode()
 def compute_flow_scores(args, t):
     loader = img_dataloader(args.real_data_path, resolution=args.real_size, batch_size=args.batch, shuffle=False,
-                            distributed=args.distributed, infinite=False)
+                            distributed=args.distributed, infinite=False, drop_last=False)
     num_total = len(loader.dataset)
     scores = []
     pbar = tqdm(loader) if primary() else loader

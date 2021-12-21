@@ -107,7 +107,6 @@ def average(args, t, classifier):
 if __name__ == '__main__':
     parser = base_eval_argparse()
     # Visualization hyperparameters:
-    parser.add_argument("--blend_alg", default='alpha', type=str, choices=['alpha', 'laplacian', 'laplacian_small'])
     parser.add_argument("-s", "--sigma", default=1.3, type=float)
     parser.add_argument("-o", "--opacity", default=0.75, type=float)
     parser.add_argument("--objects", action='store_true', help='If specified, loads RGB values from the label '
