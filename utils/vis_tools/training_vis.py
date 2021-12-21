@@ -12,14 +12,14 @@ import os
 
 
 @torch.inference_mode()
-def run_loader_mean(stn, loader, device, max_eles=12000, **stn_kwargs):
+def run_loader_mean(stn, loader, device, max_eles=12000, unfold=True, **stn_kwargs):
     # Computes the average congealed image over a dataloader of (usually real) images.
     # Also returns the congealed images computed on this process.
     out = []
     total = 0
     for x in loader:
         x = x.to(device)
-        out.append(stn(x, unfold=True, **stn_kwargs).cpu())
+        out.append(stn(x, unfold=unfold, **stn_kwargs).cpu())
         total += x.size(0)
         if total >= (max_eles // get_world_size()):
             break

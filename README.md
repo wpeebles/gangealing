@@ -29,8 +29,6 @@ This repository contains:
 * 🚀 An implementation of anti-aliased grid sampling useful for Spatial Transformers (thanks Tim Brooks!)
 * 🎆 Several additional evaluation and visualization scripts to reproduce results from our paper and website
 
-This codebase should be mostly ready to go, but we may make a few tweaks over December 2021 to smooth out any remaining wrinkles.
-
 ## Setup
 
 First, download the repo and add it to your `PYTHONPATH`:
@@ -66,7 +64,6 @@ The `--output_resolution` argument controls the size of congealed images output 
 
 We use LMDBs for storing data. You can use [`prepare_data.py`](prepare_data.py) to pre-process input datasets. Note that setting-up real data is not
 required for training.
-
 
 **LSUN:** The following command will automatically download and pre-process the first 10,000 images from LSUN Cats (you can change `--lsun_category` and `--max_images`):
 
@@ -109,7 +106,7 @@ python prepare_data.py --cub_acsm --out data/cub_val --size 256
 It also can be used to visualize label/object propagation:
 
 ```python
-python applications/vis_correspondence.py --ckpt cat --real_data_path data/lsun_cats --vis_in_stages --real_size 512 --output_resolution 512 --resolution 512 --label_path assets/masks/cat_mask.png --dset_indices 1922 2363 8558 7401 9750 7432 2105 53 1946
+python applications/vis_correspondence.py --ckpt cat --real_data_path data/lsun_cats --vis_in_stages --real_size 512 --output_resolution 512 --resolution 256 --label_path assets/masks/cat_mask.png --dset_indices 2363 9750 7432 1946
 ```
 
 ## Mixed Reality (Object Lenses) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1JkUjhTjR8MyLxwarJjqnh836BICfocTu?usp=sharing)
@@ -166,9 +163,29 @@ Pass the `png` file to the `--label_path` argument like above.
 
 We recommend saving the object at a high resolution for the highest quality results (e.g., 4K resolution or higher if you are propagating to a 1K resolution video).
 
+## Running on Images
+
+![Teaser image](images/edit_light.png#gh-light-mode-only)
+![Teaser image](images/edit_dark.png#gh-dark-mode-only)
+
+[`propagate_to_images.py`](applications/propagate_to_images.py) runs the Spatial Transformer on real images. It will save 
+the congealed (aligned) output images to disk. Basic usage:
+
+```python
+python applications/propagate_to_images.py --ckpt cat --real_data_path data/lsun_cats --real_size 512
+```
+
+**Edit Propagation:** Add `--label_path assets/objects/cat/cat_vr_headset.png --objects -s 0.3 -o 1 --resolution 4096` to propagate a VR headset to the cat images.
+
+**Dense Correspondence:** Add `--label_path assets/masks/cat_mask.png` to propagate a mask.
+
+**Average Image:** Add `--n_mean 5200` to compute the average congealed image over 5200 input images. If you use this argument, you can call the script with `torchrun --nproc_per_node NUM_GPUS` instead of `python` to speed it up.
+
+The main difference between this script and [`vis_correspondence.py`](applications/vis_correspondence.py) is that this one just saves images instead of fancy video visualizations. It's much faster and takes less GPU memory as a result.
+
 ## PCK-Transfer Evaluation
 
-Our repo includes a fast implementation of PCK-Transfer in [`pck.py`](applications/pck.py) that supports multi-GPU evaluation. First, make sure you've set up either SPair-71K or CUB as described earlier. You can evaluate PCK-Transfer as follows:
+Our repo includes a fast implementation of PCK-Transfer in [`pck.py`](applications/pck.py) that supports multi-GPU evaluation. First, make sure you've set up either SPair-71K or CUB as described [earlier](#preparing-real-data). You can evaluate PCK-Transfer as follows:
 
 To evaluate SPair-71K (e.g., `cats` category):
 
@@ -176,7 +193,7 @@ To evaluate SPair-71K (e.g., `cats` category):
 torchrun --nproc_per_node=NUM_GPUS applications/pck.py --ckpt cat --real_data_path data/spair_cats_test --real_size 256
 ```
 
-To evaluate PCK on CUB:
+To evaluate CUB:
 
 ```python
 torchrun --nproc_per_node=NUM_GPUS applications/pck.py --ckpt cub --real_data_path data/cub_val --real_size 256 --num_pck_pairs 10000 --transfer_both_ways
@@ -190,7 +207,7 @@ Note that different methods compute PCK in slightly different ways depending on 
 
 Finally, we also include a script that applies a pre-trained Spatial Transformer to align and filter an input dataset (e.g., for downstream GAN training): [`congeal_dataset.py`](applications/congeal_dataset.py)
 
-To use this, you will need two versions of your unaligned input dataset: (1) a pre-processed version (via `prepare_data.py` as described above), and (2) a raw, unprocessed version of the dataset stored in LMDB format. We'll explain how to create this second unprocessed copy below. 
+To use this, you will need two versions of your unaligned input dataset: (1) a pre-processed version (via `prepare_data.py` as described [above](#preparing-real-data)), and (2) a raw, unprocessed version of the dataset stored in LMDB format. We'll explain how to create this second unprocessed copy below. 
 The first (pre-processed) dataset will be used to quickly compute flow scores in batch mode. The second (unprocessed) dataset will be fed into the Spatial Transformer to obtain the highest quality output images possible.
 
 The first recommended step is to compute _flow smoothness scores_ for each image in the dataset. As described in our paper, these scores
@@ -256,7 +273,7 @@ We include several training scripts [here](scripts/training). Running these scri
 Note that for the majority of experiments in our paper, we trained using 8 GPUs and a per-GPU batch size of 5.
 
 ## Note on cuDNN/CUDA Versions
-We have found on some GPUs that GANgealing training and inference runs faster at low batch sizes with CUDA 10.2/cuDNN 7.6.5 compared to CUDA 11/cuDNN 8. For example, on RTX 6000 GPUs with a per-GPU batch size of 5, training is 3x faster with CUDA 10.2/cuDNN 7.6.5. However, for high per-GPU batch sizes (32+), CUDA 11/CuDNN 8 seems to be faster. We have also observed very good performance with CUDA 11 on A100 GPUs using a per-GPU batch size of 5. We include two environments in this repo: [`environment.yml`](environment.yml) will install recent versions of CUDA/cuDNN whereas [`environment_cu102.yml`](environment_cu102.yml) will install CUDA 10.2/cuDNN 7.6.5. See [here](https://github.com/pytorch/pytorch/issues/47908) for more discussion.
+We have found on some GPUs that GANgealing training and inference runs faster at low batch sizes with CUDA 10.2/cuDNN 7.6.5 compared to CUDA 11/cuDNN 8. For example, on RTX 6000 GPUs with a per-GPU batch size of 5, training is 3x faster with CUDA 10.2/cuDNN 7.6.5. However, for high per-GPU batch sizes (32+), CUDA 11/cuDNN 8 seems to be faster. We have also observed very good performance with CUDA 11 on A100 GPUs using a per-GPU batch size of 5. We include two environments in this repo: [`environment.yml`](environment.yml) will install recent versions of CUDA/cuDNN whereas [`environment_cu102.yml`](environment_cu102.yml) will install CUDA 10.2/cuDNN 7.6.5. See [here](https://github.com/pytorch/pytorch/issues/47908) for more discussion.
 
 ## Citation
 

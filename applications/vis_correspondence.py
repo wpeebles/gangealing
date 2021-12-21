@@ -2,11 +2,14 @@
 This script creates videos that showcase the congealing and label propagation learned by a pre-trained GANgealing
 model.
 
-Example dataset indices used for visualizations:
-Cats, CelebA: 5 9 12 13 15 18 19 20 21
-Cars: 9 23 28 37 39 49 53 56 101
-Horses: 12 15 21 31 41 81 96 124 132
-CUB: 1032 230 603 401 555 95 71 392 621
+Example success case --dset_indices used for visualizations:
+
+Bicycle: 72 179 225 16 90 48 227 235 249
+Cat: 1922 2363 8558 7401 9750 7432 2105 53 1946
+Dog: 180 199 15 241 121 124 257 203 208
+TV: 234 6 111 19 8 89 1 223 219
+CUB: 1629 621 219 1515 1430 603 392 220 1519
+In-The-Wild CelebA: 14 739 738 1036 506 534 517 2054 15
 CUB failure cases: 580 581 582 596 597 599 600 601 607
 """
 import torch
@@ -29,6 +32,14 @@ import os
 @torch.inference_mode()
 def sample_images_and_points(args, t, classifier, device):
     dset = MultiResolutionDataset(args.real_data_path, resolution=args.real_size)
+    if args.num_heads > 1:  # clustering-only:
+        loader = img_dataloader(args.real_data_path, resolution=args.real_size, shuffle=False, batch_size=args.batch,
+                                distributed=args.distributed, return_indices=True, infinite=False)
+        path = f'visuals/cluster2indices_{os.path.basename(os.path.normpath(args.real_data_path))}.pt'
+        if not os.path.isfile(path) and args.n_mean <= 0:  # Need to assign some real images to clusters first:
+            args.n_mean = 2500
+        subset_indices = divide_real_images_into_clusters(loader, classifier, args.cluster, args.num_heads, args.n_mean, path)
+        dset = Subset(dset, subset_indices)
     if args.flow_scores is not None:
         dset = filter_dataset(dset, args.flow_scores, args.fraction_retained)
     data = torch.stack([dset[i] for i in args.dset_indices], 0).to(device)
@@ -292,12 +303,14 @@ def divide_real_images_into_clusters(loader, classifier, cluster, num_clusters, 
         cluster2indices = torch.load(path)
         print('loaded assigned cluster indices')
     else:  # compute assignments and optionally cache them
+        print('computing and caching cluster assignments')
         device = 'cuda'
         cluster2indices = {i: [] for i in range(num_clusters)}
         totals = torch.zeros(num_clusters)
         min_needed_per_cluster = math.ceil(min_needed_per_cluster / get_world_size())
         pbars = [tqdm(total=min_needed_per_cluster) for _ in range(num_clusters)] if primary() else None
-        [pbar.set_description(f'cluster {i}') for i, pbar in enumerate(pbars)]
+        if primary():
+            [pbar.set_description(f'cluster {i}') for i, pbar in enumerate(pbars)]
         for (data, dataset_indices) in loader:
             data = data.to(device)
             predictions = classifier.assign(data)
@@ -422,7 +435,6 @@ def average_and_congeal(args, t, classifier):
         frames = frames.mul(255.0).round().permute(0, 2, 3, 1).cpu().numpy().astype(np.uint8)
         frames = [frame for frame in frames]
         save_video(frames, args.fps, f'{args.out}/smoothly_average.mp4', codec='libx264')
-        save_video(frames, args.fps, f'{args.out}/smoothly_average.avi', codec='png')
 
 
 if __name__ == '__main__':
@@ -442,11 +454,11 @@ if __name__ == '__main__':
     parser.add_argument("--n_mean", type=int, default=-1, help='The number of images used to create the average image '
                                                                'visualizations. If n_mean=-1, then no average image '
                                                                'visualizations will be created.')
-    parser.add_argument("--output_resolution", type=int, default=256,
+    parser.add_argument("--output_resolution", type=int, default=None,
                         help='Resolution of the output video. Note that the regressed flow will be upsampled to this '
                              'resolution. This produces a very high quality output image (much higher quality than '
                              'upsampling in pixel space directly) as long as output_resolution is at most '
-                             'real_size.')
+                             'real_size. (default: auto)')
     parser.add_argument("--resolution", type=int, default=256, help='Resolution of the flow field. Making this larger '
                                                                     'will construct denser correspondences')
     parser.add_argument("--dset_indices", type=int, nargs='+', default=list(range(4)),
@@ -467,6 +479,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.num_heads > 1:  # Only applies to clustering models:
         assert args.cluster is not None, 'Must add --cluster <index> to select a cluster to visualize'
+    if args.output_resolution is None:
+        args.output_resolution = args.real_size
     os.makedirs(args.out, exist_ok=True)
     create_average_visualization = args.n_mean > 0
     args.distributed = setup_distributed() if create_average_visualization else False
