@@ -18,7 +18,7 @@ to real images at test time automatically.
 [![Watch the video](images/method.png)](https://www.wpeebles.com/images/gangealing_visuals/gangealing.mp4)
 
 Once trained, the average aligned image is a _template_ from which you can propagate anything. For example, by drawing 
-cartoon eyes on our average congealed cat image, you can propagate them realistically any video or image of a cat.
+cartoon eyes on our average congealed cat image, you can propagate them realistically to any video or image of a cat.
 
 This repository contains:
 
