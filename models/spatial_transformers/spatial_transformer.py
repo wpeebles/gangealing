@@ -14,10 +14,7 @@ def get_stn(transforms, **stn_kwargs):
     assert is_str or is_list
     if is_str:
         transforms = [transforms]
-    if len(transforms) == 1:
-        return SpatialTransformer(transform=transforms[0], **stn_kwargs)
-    else:
-        return ComposedSTN(transforms, **stn_kwargs)
+    return ComposedSTN(transforms, **stn_kwargs)
 
 
 def unravel_index(indices, shape):
