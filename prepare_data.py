@@ -251,7 +251,7 @@ def load_spair_data(path, size, out_path, category='cat', split='test'):
 
 
 def load_image_folder(path, pattern):
-    files = sorted(glob(f'{path}/{pattern}'))[420:1980]
+    files = sorted(glob(f'{path}/{pattern}'))
     bboxes = [None] * len(files)  # This means no bounding boxes are used
     return files, bboxes
 
