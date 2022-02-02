@@ -197,7 +197,7 @@ def run_gangealing_on_video(args, t, classifier):
             colors_in = colors[active_cluster_ix.item()]
             alpha_channels_in = alpha_channels[active_cluster_ix.item()]
         video_frame = splat_points(original_batch, propagated_points, sigma=args.sigma, opacity=args.opacity,
-                                   colors=colors_in, alpha_channel=alpha_channels_in)
+                                   colors=colors_in, alpha_channel=alpha_channels_in, blend_alg=args.blend_alg)
         if args.save_frames:
             for frame, index in zip(video_frame, batch_indices):
                 fn = f'{video_path}/frames/{index.item()}.png'
