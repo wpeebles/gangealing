@@ -6,6 +6,7 @@ import moviepy.editor
 import plotly.graph_objects as go
 import plotly.colors
 from utils.splat2d_cuda import splat2d
+from utils.laplacian_blending import LaplacianBlender
 from tqdm import tqdm
 import ray
 import os
@@ -131,7 +132,8 @@ def get_plotly_colors(num_points, colorscale):
 
 
 @torch.inference_mode()
-def splat_points(images, points, sigma, opacity, colorscale='turbo', colors=None, alpha_channel=None):
+def splat_points(images, points, sigma, opacity, colorscale='turbo', colors=None, alpha_channel=None,
+                 blend_alg='alpha'):
     """
     Highly efficient GPU-based splatting algorithm. This function is a wrapper for Splat2D to overlay points on images.
     For highest performance, use the colors argument directly instead of colorscale.
@@ -149,6 +151,9 @@ def splat_points(images, points, sigma, opacity, colorscale='turbo', colors=None
             speed-up.
     alpha_channel: [Optional] (N, P, 1) tensor (or (N, K*P, 1)). If specified, colors will be blended into the output
                     image based on the opacity values in alpha_channel (between 0 and 1).
+    blend_alg: [Optiona] str. Specifies the blending algorithm to use when merging points into images.
+                              Can use alpha compositing ('alpha'), Laplacian Pyramid Blending ('laplacian')
+                              or a more conservative version of Laplacian Blending ('laplacian_light')
     :return (N, C, H, W) tensor in [-1, +1] with points splatted onto images
     """
     assert images.dim() == 4  # (N, C, H, W)
@@ -178,7 +183,14 @@ def splat_points(images, points, sigma, opacity, colorscale='turbo', colors=None
     blank_mask = torch.zeros(batch_size, 1, images.size(2), images.size(3), device='cuda')
     prop_obj_img = splat2d(blank_img, points, colors, sigma, False)  # (N, C, H, W)
     prop_mask_img = splat2d(blank_mask, points, alpha_channel, sigma, True) * opacity  # (N, 1, H, W)
-    out = prop_mask_img * prop_obj_img + (1 - prop_mask_img) * images  # basic alpha-composite
+    if blend_alg == 'alpha':
+        out = prop_mask_img * prop_obj_img + (1 - prop_mask_img) * images  # basic alpha-composite
+    elif blend_alg == 'laplacian':
+        blender = LaplacianBlender().to(images.device)
+        out = blender(images, prop_obj_img, prop_mask_img)
+    elif blend_alg == 'laplacian_light':
+        blender = LaplacianBlender(levels=3, gaussian_kernel_size=11, gaussian_sigma=0.5).to(images.device)
+        out = blender(images, prop_obj_img, prop_mask_img)
     return out
 
 

@@ -127,8 +127,8 @@ The first step is to prepare the video dataset. If you have the video saved as a
 ```python
 python prepare_data.py --path folder_of_frames --out data/my_video_dataset --pad center --size 1024
 ```
-This command will pre-process the images to square with center-cropping and resize them to 1024x1024 resolution (you can use any square resolution you like).
-You can instead specify `--pad border` to perform border padding instead of cropping.
+This command will pre-process the images to square with center-cropping and resize them to 1024x1024 resolution.
+You can specify `--pad border` to perform border padding instead of cropping or `--pad resize_small_side` to preserve aspect ratio. No matter what you choose for `--pad`, the value you use for `--size` needs to be a multiple of 128. 
 
 If your video is saved in `mp4`, `mov`, etc. format, we provide a script that will convert it into frames via FFmpeg:
 
@@ -151,6 +151,7 @@ This will efficiently parallelize the evaluation of the video over `NUM_GPUS`. H
 * `--objects` will propagate RGB values from your `label_path` image. If you omit this argument, only the alpha channel of the `label_path` image will be used, and an RGB colorscale will be created (useful for visualizing tracking when propagating masks)
 * `--no_flip_inference` disables flipping, which is recommended for models that do not benefit much from flipping (e.g., `cat`, `celeba`, `tvmonitor`)
 * `--resolution` controls the number of pixels propagated. When using `mixed_reality.py`to propagate objects, we recommend making this value very large (e.g., `8192` for a 1K resolution video)
+* `--blend_alg` controls the blending algorithm (`alpha` or `laplacian`)
 * `--sigma` controls the radius of splatted pixels
 * `--opacity` controls the opacity of splatted pixels
 

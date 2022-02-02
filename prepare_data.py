@@ -88,6 +88,31 @@ def center_crop(img, target_res):
     return img
 
 
+def nchw_center_crop(img):
+    # Essentially same as the above function but for (N,C,H,W) PyTorch tensors and doesn't resize (only crops)
+    assert img.dim() == 4
+    H, W = img.size(2), img.size(3)
+    crop = min(H, W)
+    top_start = (H - crop) // 2
+    left_start = (W - crop) // 2
+    img = img[:, :, top_start: (H + crop) // 2, left_start: (W + crop) // 2]
+    return img, (top_start, left_start)
+
+
+def resize_small_side(img, target_res):
+    # This function resizes img while maintaining its aspect ratio.
+    # The smaller side of img gets resized to target_res.
+    w, h = img.size
+    if w < h:
+        new_w = target_res
+        new_h = h * target_res // w
+    else:
+        new_h = target_res
+        new_w = w * target_res // h
+    img = img.resize((new_w, new_h), Image.ANTIALIAS)
+    return img
+
+
 def cub_crop(img, target_res, bbox):
     # This function mimics ACSM's pre-processing used for the CUB dataset (up to image resampling and padding color)
     img = np.asarray(img)
@@ -226,7 +251,7 @@ def load_spair_data(path, size, out_path, category='cat', split='test'):
 
 
 def load_image_folder(path, pattern):
-    files = sorted(glob(f'{path}/{pattern}'))
+    files = sorted(glob(f'{path}/{pattern}'))[420:1980]
     bboxes = [None] * len(files)  # This means no bounding boxes are used
     return files, bboxes
 
@@ -240,6 +265,8 @@ def resize_and_convert(img, size, pad, quality=100, format='jpeg', bbox=None):
         img = center_crop(img, size)
     elif pad == 'none':
         pass
+    elif pad == 'resize_small_side':
+        img = resize_small_side(img, size)
     elif pad == 'cub_crop':
         img = cub_crop(img, size, bbox)
     else:
@@ -379,7 +406,10 @@ if __name__ == "__main__":
         default='png',
         help="format to store images in the database",
     )
-    parser.add_argument("--pad", choices=['zero', 'border', 'center', 'none'], default='center')
+    parser.add_argument("--pad", choices=['zero', 'border', 'center', 'resize_small_side', 'none'], default='center',
+                        help='Algorithm to pad or crop input images to square. zero = pad with zeros, '
+                             'border = border padding, center = center crop, resize_small_size = resize while preserving '
+                             'aspect ratio (only mixed_reality.py supports this option), none = no pre-processing')
     parser.add_argument("--path", type=str, help="path to the image dataset", default=None)
     parser.add_argument("--input_is_lmdb", action='store_true',
                         help='If true, path input points to an LMDB dataset. This is useful for, e.g., creating '

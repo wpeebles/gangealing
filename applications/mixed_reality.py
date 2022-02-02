@@ -6,6 +6,7 @@ import torch
 import numpy as np
 import math
 from datasets import img_dataloader
+from prepare_data import nchw_center_crop
 from models import SpatialTransformer
 from utils.vis_tools.helpers import images2grid, save_video, save_image, load_dense_label, load_cluster_dense_labels, load_pil, splat_points, get_plotly_colors, get_colorscale
 from utils.distributed import setup_distributed, primary, all_gather
@@ -138,6 +139,12 @@ def run_gangealing_on_video(args, t, classifier):
     for (batch, batch_indices) in pbar:
         N = batch.size(0)
         batch = batch.to('cuda')
+        # Handle cropping if needed:
+        frames_are_non_square = batch.size(2) != batch.size(3)
+        original_batch = batch
+        if frames_are_non_square:
+            batch, (y_start, x_start) = nchw_center_crop(batch)  # perform a center crop to make frames square
+
         # Step (4.1) Propagate correspondences to the next batch of video frames:
         if mode == 'unimodal' or mode == 'predict_cluster':
             batch_flipped, flip_indices, warp_policy, active_cluster_ix = \
@@ -175,6 +182,12 @@ def run_gangealing_on_video(args, t, classifier):
             propagated_points = torch.cat(propagated_points, 1)
             active_cluster_ix = torch.cat(active_cluster_ix, 0)
 
+        # If cropping was performed, we need to adjust our coordinate system to overlay points correctly
+        # in the original, uncropped video:
+        if frames_are_non_square:
+            propagated_points[:, :, 0] += x_start
+            propagated_points[:, :, 1] += y_start
+
         # Select the colorscale for visualization:
         if mode == 'unimodal' or mode == 'fixed_cluster':
             colors_in = colors.repeat(N, 1, 1)
@@ -183,8 +196,8 @@ def run_gangealing_on_video(args, t, classifier):
             assert active_cluster_ix.size(0) == 1
             colors_in = colors[active_cluster_ix.item()]
             alpha_channels_in = alpha_channels[active_cluster_ix.item()]
-        video_frame = splat_points(batch, propagated_points, sigma=args.sigma, opacity=args.opacity, colors=colors_in,
-                                   alpha_channel=alpha_channels_in)
+        video_frame = splat_points(original_batch, propagated_points, sigma=args.sigma, opacity=args.opacity,
+                                   colors=colors_in, alpha_channel=alpha_channels_in)
         if args.save_frames:
             for frame, index in zip(video_frame, batch_indices):
                 fn = f'{video_path}/frames/{index.item()}.png'
@@ -267,6 +280,8 @@ if __name__ == '__main__':
     parser.add_argument("--resolution", type=int, default=128, help='Resolution at which to load label_path. Making this '
                                                                     'larger will propagate more pixels (i.e., find '
                                                                     'denser correspondences)')
+    parser.add_argument("--blend_alg", type=str, choices=['alpha', 'laplacian', 'laplacian_light'], default='alpha',
+                        help='The blending algorithm to use.')
     parser.add_argument("--fps", type=int, default=60, help='FPS of saved videos')
     parser.add_argument("--overlay_congealed", action='store_true', help='If specified, overlays the input dense label '
                                                                          'on the congealed mp4 video')
