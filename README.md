@@ -285,7 +285,7 @@ If our code or models aided your research, please cite our [paper](https://arxiv
 title={GAN-Supervised Dense Visual Alignment},
 author={William Peebles and Jun-Yan Zhu and Richard Zhang and Antonio Torralba and Alexei Efros and Eli Shechtman},
 booktitle={CVPR},
-year={2022},
+year={2022}
 }
 ```
 
