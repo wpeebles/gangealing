@@ -1,4 +1,4 @@
-## GAN-Supervised Dense Visual Alignment (GANgealing)<br><sub>Official PyTorch Implementation of the CVPR 2022 Paper</sub>
+## GAN-Supervised Dense Visual Alignment (GANgealing)<br><sub>Official PyTorch Implementation of the CVPR 2022 Paper (Oral Presentation)</sub>
 
 ### [Paper](https://arxiv.org/abs/2112.05143) | [Project Page](https://www.wpeebles.com/gangealing) | [Video](https://youtu.be/Qa1ASS_NuzE) | Mixed Reality Playground [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1JkUjhTjR8MyLxwarJjqnh836BICfocTu?usp=sharing)
 
@@ -9,7 +9,7 @@ This repo contains training, evaluation, and visualization code for the GANgeali
 > [**GAN-Supervised Dense Visual Alignment**](https://www.wpeebles.com/gangealing)<br>
 > [William Peebles](https://www.wpeebles.com), [Jun-Yan Zhu](https://www.cs.cmu.edu/~junyanz/), [Richard Zhang](http://richzhang.github.io/), [Antonio Torralba](https://groups.csail.mit.edu/vision/torralbalab/), [Alexei Efros](https://people.eecs.berkeley.edu/~efros/), [Eli Shechtman](https://research.adobe.com/person/eli-shechtman/)<br>
 > UC Berkeley, Carnegie Mellon University, Adobe Research, MIT CSAIL<br>
-> CVPR 2022
+> CVPR 2022 - Oral Presentation
 
 GAN-Supervised Learning is a method for learning discriminative models and their GAN-generated training data jointly end-to-end. We apply our framework to the dense visual alignment problem. Inspired by the classic Congealing method, our GANgealing algorithm trains a Spatial Transformer to
 warp random samples from a GAN trained on unaligned data to a common, jointly-learned target mode. The target mode is
@@ -272,7 +272,7 @@ We include several training scripts [here](scripts/training). Running these scri
 
 **Clustering:** When training a clustering model (`--num_heads > 1`), you will need to train a cluster classifier network afterwards to use the model on real images. This is done with [`train_cluster_classifier.py`](train_cluster_classifier.py); you can find an example command [here](scripts/training/lsun_cars_cluster_classifier.sh).
 
-Note that for the majority of experiments in our paper, we trained using 8 GPUs and a per-GPU batch size of 5.
+For the majority of experiments in our paper, we trained using 8 GPUs and a per-GPU batch size of 5.
 
 ## Note on cuDNN/CUDA Versions
 We have found on some GPUs that GANgealing training and inference runs faster at low batch sizes with CUDA 10.2/cuDNN 7.6.5 compared to CUDA 11/cuDNN 8. For example, on RTX 6000 GPUs with a per-GPU batch size of 5, training is 3x faster with CUDA 10.2/cuDNN 7.6.5. However, for high per-GPU batch sizes (32+), CUDA 11/cuDNN 8 seems to be faster. We have also observed very good performance with CUDA 11 on A100 GPUs using a per-GPU batch size of 5. We include two environments in this repo: [`environment.yml`](environment.yml) will install recent versions of CUDA/cuDNN whereas [`environment_cu102.yml`](environment_cu102.yml) will install CUDA 10.2/cuDNN 7.6.5. See [here](https://github.com/pytorch/pytorch/issues/47908) for more discussion.
