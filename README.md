@@ -1,6 +1,6 @@
 ## GAN-Supervised Dense Visual Alignment (GANgealing)<br><sub>Official PyTorch Implementation of the CVPR 2022 Paper (Oral Presentation)</sub>
 
-### [Paper](https://arxiv.org/abs/2112.05143) | [Project Page](https://www.wpeebles.com/gangealing) | [Video](https://youtu.be/Qa1ASS_NuzE) | Mixed Reality Playground [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1JkUjhTjR8MyLxwarJjqnh836BICfocTu?usp=sharing)
+### [Paper](https://arxiv.org/abs/2112.05143) | [Project Page](https://www.wpeebles.com/gangealing) | [Video](https://youtu.be/Qa1ASS_NuzE) | [Two Minute Papers](https://www.youtube.com/watch?v=qtOkktTNs-k) | Mixed Reality Playground [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1JkUjhTjR8MyLxwarJjqnh836BICfocTu?usp=sharing)
 
 ![Teaser image](images/snowpuppy.gif) ![Teaser image](images/elon.gif) ![Teaser image](images/catpet2teaser.gif)
 
@@ -291,6 +291,6 @@ year={2022}
 
 ## Acknowledgments
 
-We thank Tim Brooks for his antialiased sampling code and helpful discussions. We thank Tete Xiao, Ilija Radosavovic, Taesung Park, Assaf Shocher, Phillip Isola, Angjoo Kanazawa, Shubham Goel, Allan Jabri, Shubham Tulsiani, and Dave Epstein for helpful discussions. This material is based upon work supported by the National Science Foundation Graduate Research Fellowship Program under Grant No. DGE 2146752. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the National Science Foundation.  Additional funding is provided by Adobe and Berkeley Deep Drive.
+We thank Tim Brooks for his anti-aliased sampling code and helpful discussions. We thank Tete Xiao, Ilija Radosavovic, Taesung Park, Assaf Shocher, Phillip Isola, Angjoo Kanazawa, Shubham Goel, Allan Jabri, Shubham Tulsiani, and Dave Epstein for helpful discussions. This material is based upon work supported by the National Science Foundation Graduate Research Fellowship Program under Grant No. DGE 2146752. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the National Science Foundation. Additional funding provided by Berkeley DeepDrive, SAP and Adobe.
 
 This repository is built on top of rosinality's excellent [PyTorch re-implementation of StyleGAN2](https://github.com/rosinality/stylegan2-pytorch).
