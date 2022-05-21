@@ -272,8 +272,7 @@ We include several training scripts [here](scripts/training). Running these scri
 
 **Clustering:** When training a clustering model (`--num_heads > 1`), you will need to train a cluster classifier network afterwards to use the model on real images. This is done with [`train_cluster_classifier.py`](train_cluster_classifier.py); you can find an example command [here](scripts/training/lsun_cars_cluster_classifier.sh).
 
-> **Note**
-> 
+> **Note**<br>
 > For the majority of experiments in our paper, we trained using 8 GPUs and a per-GPU batch size of 5. If you train with fewer GPUs, you will likely need to increase your per-GPU batch size via the `--batch` argument in order to train models to high performance.
 
 ## Note on cuDNN/CUDA Versions
