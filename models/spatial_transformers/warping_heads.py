@@ -17,8 +17,8 @@ class SimilarityHead(nn.Module):
 
     def __init__(self, in_shape, antialias=True, num_heads=1, **kwargs):
         """
-        :param in_shape: int. SimiarlityHead.forward expects input features of shape (N, D). Pass D here.
-        :param antialias: boolaen. Whether or not to use antialiasing when applying the similarity transformation.
+        :param in_shape: int. SimilarityHead.forward expects input features of shape (N, D). Pass D here.
+        :param antialias: boolean. Whether or not to use antialiasing when applying the similarity transformation.
         :param num_heads: int. Number of clusters being learned. Each cluster gets its own warping head.
         :param kwargs: Ignore; this is used to filter any parameters that are only processed by FlowHead
         """
