@@ -272,8 +272,9 @@ We include several training scripts [here](scripts/training). Running these scri
 
 **Clustering:** When training a clustering model (`--num_heads > 1`), you will need to train a cluster classifier network afterwards to use the model on real images. This is done with [`train_cluster_classifier.py`](train_cluster_classifier.py); you can find an example command [here](scripts/training/lsun_cars_cluster_classifier.sh).
 
-**Note**
-For the majority of experiments in our paper, we trained using 8 GPUs and a per-GPU batch size of 5. If you train with fewer GPUs, you will likely need to increase your per-GPU batch size via the `--batch` argument in order to train models to high performance.
+> **Note**
+> 
+> For the majority of experiments in our paper, we trained using 8 GPUs and a per-GPU batch size of 5. If you train with fewer GPUs, you will likely need to increase your per-GPU batch size via the `--batch` argument in order to train models to high performance.
 
 ## Note on cuDNN/CUDA Versions
 We have found on some GPUs that GANgealing training and inference runs faster at low batch sizes with CUDA 10.2/cuDNN 7.6.5 compared to CUDA 11/cuDNN 8. For example, on RTX 6000 GPUs with a per-GPU batch size of 5, training is 3x faster with CUDA 10.2/cuDNN 7.6.5. However, for high per-GPU batch sizes (32+), CUDA 11/cuDNN 8 seems to be faster. We have also observed very good performance with CUDA 11 on A100 GPUs using a per-GPU batch size of 5. We include two environments in this repo: [`environment.yml`](environment.yml) will install recent versions of CUDA/cuDNN whereas [`environment_cu102.yml`](environment_cu102.yml) will install CUDA 10.2/cuDNN 7.6.5. See [here](https://github.com/pytorch/pytorch/issues/47908) for more discussion.
