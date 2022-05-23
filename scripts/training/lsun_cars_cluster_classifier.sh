@@ -1,3 +1,6 @@
+# Note: if you're training with fewer than 8 gpus, you should increase the per-gpu batch size controlled by
+# the --batch argument so total batch size is preserved. Default value of --batch is 5 (assumes 8 gpus for training
+# for a total batch size of 40 across all gpus)
 torchrun --nproc_per_node=8 train_cluster_classifier.py \
 --ckpt lsun_cars_gangealing_checkpoint.pt --padding_mode reflection \
 --vis_every 5000 --ckpt_every 50000 --iter 55000 --period 50000 --loss_fn lpips --exp-name lsun_cars_cluster_classifier \
