@@ -49,7 +49,7 @@ conda activate gg
 
 This will install PyTorch with a recent version of CUDA/cuDNN. To install CUDA 10.2/cuDNN 7.6.5 specifically, you can use [`environment_cu102.yml`](environment_cu102.yml) in the above command. See [below](#note-on-cudnncuda-versions) for details on performance differences between CUDA/cuDNN versions.
 
-If you use your own environment, you'll need a recent version of PyTorch (1.10.1+).
+If you use your own environment, you need a recent version of PyTorch (1.10.1+). Older versions of PyTorch will likely have problems building the StyleGAN2 extensions.
 
 ## Running Pre-Trained Models
 
