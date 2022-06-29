@@ -1,4 +1,4 @@
-## GAN-Supervised Dense Visual Alignment (GANgealing)<br><sub>Official PyTorch Implementation of the CVPR 2022 Paper (Oral Presentation)</sub>
+## GAN-Supervised Dense Visual Alignment (GANgealing)<br><sub>Official PyTorch Implementation of the CVPR 2022 Paper (Oral, Best Paper Finalist)</sub>
 
 ### [Paper](https://arxiv.org/abs/2112.05143) | [Project Page](https://www.wpeebles.com/gangealing) | [Video](https://youtu.be/Qa1ASS_NuzE) | [Two Minute Papers](https://www.youtube.com/watch?v=qtOkktTNs-k) | Mixed Reality Playground [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1JkUjhTjR8MyLxwarJjqnh836BICfocTu?usp=sharing)
 
@@ -9,7 +9,7 @@ This repo contains training, evaluation, and visualization code for the GANgeali
 > [**GAN-Supervised Dense Visual Alignment**](https://www.wpeebles.com/gangealing)<br>
 > [William Peebles](https://www.wpeebles.com), [Jun-Yan Zhu](https://www.cs.cmu.edu/~junyanz/), [Richard Zhang](http://richzhang.github.io/), [Antonio Torralba](https://groups.csail.mit.edu/vision/torralbalab/), [Alexei Efros](https://people.eecs.berkeley.edu/~efros/), [Eli Shechtman](https://research.adobe.com/person/eli-shechtman/)<br>
 > UC Berkeley, Carnegie Mellon University, Adobe Research, MIT CSAIL<br>
-> CVPR 2022 - Oral Presentation
+> CVPR 2022 - Oral, Best Paper Finalist
 
 GAN-Supervised Learning is a method for learning discriminative models and their GAN-generated training data jointly end-to-end. We apply our framework to the dense visual alignment problem. Inspired by the classic Congealing method, our GANgealing algorithm trains a Spatial Transformer to
 warp random samples from a GAN trained on unaligned data to a common, jointly-learned target mode. The target mode is
@@ -49,7 +49,7 @@ conda activate gg
 
 This will install PyTorch with a recent version of CUDA/cuDNN. To install CUDA 10.2/cuDNN 7.6.5 specifically, you can use [`environment_cu102.yml`](environment_cu102.yml) in the above command. See [below](#note-on-cudnncuda-versions) for details on performance differences between CUDA/cuDNN versions.
 
-If you use your own environment, you'll need a recent version of PyTorch (1.10.1+).
+If you use your own environment, you need a recent version of PyTorch (1.10.1+). Older versions of PyTorch will likely have problems building the StyleGAN2 extensions.
 
 ## Running Pre-Trained Models
 
