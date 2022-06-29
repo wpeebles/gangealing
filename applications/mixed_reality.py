@@ -9,7 +9,7 @@ from datasets import img_dataloader
 from prepare_data import nchw_center_crop
 from models import SpatialTransformer
 from utils.vis_tools.helpers import images2grid, save_video, save_image, load_dense_label, load_cluster_dense_labels, load_pil, splat_points, get_plotly_colors, get_colorscale
-from utils.distributed import setup_distributed, primary, all_gather
+from utils.distributed import setup_distributed, primary, all_gather, get_rank, get_world_size, synchronize
 from applications import base_eval_argparse, load_stn, determine_flips
 from tqdm import tqdm
 from glob import glob
@@ -29,6 +29,13 @@ def gather_and_permute(x):
     # This function does all_gather but takes into account the stride of the data created by the distributed
     # data sampler in PyTorch.
     x = all_gather(x, cat=False).transpose(1, 0)
+    x = x.reshape(-1, *x.size()[2:])
+    return x
+
+
+def stack_and_permute(x):
+    # This is the same thing as gather_and_permute above, but for a single process (stack instead of all_gather)
+    x = torch.stack(x, 0).transpose(1, 0)
     x = x.reshape(-1, *x.size()[2:])
     return x
 
@@ -134,7 +141,8 @@ def run_gangealing_on_video(args, t, classifier):
     # video_frames will be a list of (N, C, H, W) frames: the augmented reality video with objects/points displayed
     # congealing_frames will be a list of (N, C, H, W) frames: the congealed video (i.e., STN(video))
     # [clustering only] average_frames will be a list of (N, C, H, W) frames: a video that shows which cluster(s) is/are active at each frame
-    video_frames, congealing_frames, average_frames = [], [], []
+    # dense_correspondences will be a list of (N, num_points, 2) points
+    video_frames, congealing_frames, average_frames, dense_correspondences = [], [], [], []
     pbar = tqdm(loader) if primary() else loader
     for (batch, batch_indices) in pbar:
         N = batch.size(0)
@@ -187,6 +195,10 @@ def run_gangealing_on_video(args, t, classifier):
         if frames_are_non_square:
             propagated_points[:, :, 0] += x_start
             propagated_points[:, :, 1] += y_start
+
+        # Save the dense correspondences:
+        if args.save_correspondences:
+            dense_correspondences.append(propagated_points.cpu())
 
         # Select the colorscale for visualization:
         if mode == 'unimodal' or mode == 'fixed_cluster':
@@ -259,6 +271,30 @@ def run_gangealing_on_video(args, t, classifier):
         average_frames = grid2vid(average_frames)[:num_total]
         if primary():
             save_video(average_frames, args.fps, f'{video_path}/average.mp4')
+    # Save the tensor of dense correspondences:
+    if args.save_correspondences:
+        print('Saving dense correspondences...(this might take a sec)')
+        dense_correspondences = torch.cat(dense_correspondences, 0)
+        correspondence_path = f'{video_path}/dense_correspondences.pt'
+        if get_world_size() == 1:  # Running on 1 GPU
+            torch.save(dense_correspondences[:num_total], correspondence_path)
+        else:
+            # The full dense correspondence tensor is massive and usually can't fit entirely on GPU.
+            # Instead, we have each process save its own tensor and then manually load them into the
+            # main process' CPU memory instead.
+            temp_correspondence_path = f'{video_path}/dense_correspondences_rank_{get_rank()}.pt'
+            torch.save(dense_correspondences, temp_correspondence_path)
+            synchronize()
+            if primary():
+                # Load each ranks' results:
+                dense_correspondences = [torch.load(f'{video_path}/dense_correspondences_rank_{rank}.pt') for
+                                         rank in range(get_world_size())]
+                dense_correspondences = stack_and_permute(dense_correspondences)[:num_total]
+                torch.save(dense_correspondences, correspondence_path)
+                # Delete temporary files:
+                [os.remove(f'{video_path}/dense_correspondences_rank_{rank}.pt') for
+                 rank in range(get_world_size())]
+                print(f"Saved dense correspondences at {correspondence_path}")
     if primary():
         print('Done.')
 
@@ -290,6 +326,8 @@ if __name__ == '__main__':
                                                                'be created.')
     parser.add_argument("--sigma", type=float, default=1.2, help='Size of the propagated points overlaid on the video')
     parser.add_argument("--opacity", type=float, default=0.7, help='Opacity of the propagated points overlaid on the video')
+    parser.add_argument("--save_correspondences", action='store_true',
+                        help='If specified, saves predicted dense correspondences')
     parser.add_argument("--out", type=str, default='visuals', help='directory where created videos will be saved')
     args = parser.parse_args()
     os.makedirs(args.out, exist_ok=True)

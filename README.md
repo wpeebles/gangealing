@@ -146,15 +146,16 @@ model:
 torchrun --nproc_per_node=NUM_GPUS applications/mixed_reality.py --ckpt cat --objects --label_path assets/objects/cat/cat_cartoon.png --sigma 0.3 --opacity 1 --real_size 1024 --resolution 8192 --real_data_path path_to_my_video --no_flip_inference
 ```
 
-This will efficiently parallelize the evaluation of the video over `NUM_GPUS`. Here is a quick overview of the arguments you can use with this file (see [`mixed_reality.py`](applications/mixed_reality.py) for full details):
+This will efficiently parallelize the evaluation of the video over `NUM_GPUS`. Here is a quick overview of some arguments you can use with this script (see [`mixed_reality.py`](applications/mixed_reality.py) for all options):
 * `--save_frames` can be specified to significantly reduce GPU memory usage (at the cost of speed)
 * `--label_path` points to the RGBA `png` file containing the object/mask you are propagating
 * `--objects` will propagate RGB values from your `label_path` image. If you omit this argument, only the alpha channel of the `label_path` image will be used, and an RGB colorscale will be created (useful for visualizing tracking when propagating masks)
 * `--no_flip_inference` disables flipping, which is recommended for models that do not benefit much from flipping (e.g., `cat`, `celeba`, `tvmonitor`)
 * `--resolution` controls the number of pixels propagated. When using `mixed_reality.py`to propagate objects, we recommend making this value very large (e.g., `8192` for a 1K resolution video)
-* `--blend_alg` controls the blending algorithm (`alpha` or `laplacian`)
+* `--blend_alg` controls the blending algorithm (`alpha`, `laplacian`, or `laplacian_light`)
 * `--sigma` controls the radius of splatted pixels
 * `--opacity` controls the opacity of splatted pixels
+* `--save_correspondences` will save a tensor of shape `(num_frames, num_points, 2)` containing predicted pixel correspondences in `(x,y)` format
 
 ### Creating New Object Lenses
 
