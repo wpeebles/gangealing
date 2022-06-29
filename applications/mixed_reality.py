@@ -294,7 +294,8 @@ def run_gangealing_on_video(args, t, classifier):
                 # Delete temporary files:
                 [os.remove(f'{video_path}/dense_correspondences_rank_{rank}.pt') for
                  rank in range(get_world_size())]
-                print(f"Saved dense correspondences at {correspondence_path}")
+        if primary():
+            print(f'Saved dense correspondences at {correspondence_path}')
     if primary():
         print('Done.')
 
