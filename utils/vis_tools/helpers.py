@@ -5,7 +5,9 @@ from PIL import Image, ImageColor
 import moviepy.editor
 import plotly.graph_objects as go
 import plotly.colors
-from utils.splat2d_cuda import splat2d
+# from utils.splat2d_cuda import splat2d
+from utils.splat2d_cpu import splat2d
+
 from utils.laplacian_blending import LaplacianBlender
 from tqdm import tqdm
 import ray
