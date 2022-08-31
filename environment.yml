@@ -1,4 +1,4 @@
-name: gg
+name: gg3
 channels:
   - pytorch
   - plotly
@@ -24,3 +24,4 @@ dependencies:
     - ninja
     - scikit-learn
     - termcolor
+    - imageio==2.4.1

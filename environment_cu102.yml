@@ -25,3 +25,4 @@ dependencies:
     - ninja
     - scikit-learn
     - termcolor
+    - imageio==2.4.1
