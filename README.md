@@ -282,7 +282,7 @@ We have found on some GPUs that GANgealing training and inference runs faster at
 ## Citation
 
 If our code or models aided your research, please cite our [paper](https://arxiv.org/abs/2112.05143):
-```
+```bibtex
 @inproceedings{peebles2022gansupervised,
 title={GAN-Supervised Dense Visual Alignment},
 author={William Peebles and Jun-Yan Zhu and Richard Zhang and Antonio Torralba and Alexei Efros and Eli Shechtman},
