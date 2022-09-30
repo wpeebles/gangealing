@@ -51,11 +51,11 @@ This will install PyTorch with a recent version of CUDA/cuDNN. To install CUDA 1
 
 If you use your own environment, you need a recent version of PyTorch (1.10.1+). Older versions of PyTorch will likely have problems building the StyleGAN2 extensions.
 
-## Running Pre-Trained Models
+## Running Pre-trained Models
 
 The [`applications`](applications) directory contains several files for evaluating and visualizing pre-trained GANgealing models.
 
-**Using our Pre-Trained Models:** We provide several pre-trained GANgealing models: `bicycle`, `cat`, `celeba`, `cub`, `dog` and `tvmonitor`. We also have pre-trained checkpoints
+**Using our Pre-trained Models:** We provide several pre-trained GANgealing models: `bicycle`, `cat`, `celeba`, `cub`, `dog` and `tvmonitor`. We also have pre-trained checkpoints
 for our `car` and `horse` clustering models. You can use any of these models by specifying them with the `--ckpt` argument; this will automatically download and cache
 the weights. The relevant hyperparameters for running the model (most importantly, the `--iters` argument) will be automatically loaded as well. If you want to use your own test time hyperparameters, add `--override` to the command; see an example [here](utils/download.py).
 
@@ -259,7 +259,7 @@ save_image(aligned_img, 'output.png', normalize=True, range=(-1, 1))  # save to 
 If your input image isn't square you may want to pad or crop it beforehand. Also, `stn` supports batch mode, so `input_img` can be an `(N, C, H, W)` tensor containing multiple images, in which case `aligned_image` will also be `(N, C, H, W)`.
 
 
-## Using Pre-Trained Clustering Models
+## Using Pre-trained Clustering Models
 
 The clustering models are usable in most places the unimodal models are (with a few current exceptions, such as `flow_scores.py` and `congeal_dataset.py`). To load the clustering models, add `--num_heads K` (we do this automatically if you're using one of our pre-trained models). There are also several files that let you propagate from a chosen cluster with the `--cluster cluster_index` argument (e.g., `mixed_reality.py` and `vis_correspondence.py`). Please refer to the documentation in those files for details.
 
