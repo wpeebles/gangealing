@@ -168,7 +168,7 @@ def load_CUB_keypoints(path):
     return landmarks
 
 
-def load_acsm_data(path, mat_path='data/val_cub_cleaned_new.mat', size=256, out_path=None):
+def load_acsm_data(path, mat_path='data/val_cub_cleaned.mat', size=256, out_path=None):
     from scipy.io import loadmat
     mat = loadmat(mat_path)
     files = [f'data/CUB_200_2011/images/{file[0]}' for file in mat['images']['rel_path'][0]]
