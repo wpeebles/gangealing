@@ -72,10 +72,10 @@ required for training.
 python prepare_data.py --input_is_lmdb --lsun_category cat --out data/lsun_cats --size 512 --max_images 10000
 ```
 
-If you previously downloaded the LSUN LMDB yourself (e.g., at `path_to_lsun_download`), you can instead use the following command:
+If you previously downloaded an LSUN LMDB yourself (e.g., at `path_to_lsun_cats_download`), you can instead use the following command:
 
 ```python
-python prepare_data.py --input_is_lmdb --path path_to_lsun_download --out data/lsun_cats --size 512 --max_images 10000
+python prepare_data.py --input_is_lmdb --path path_to_lsun_cats_download --out data/lsun_cats --size 512 --max_images 10000
 ```
 
 **Image Folders:** For any dataset where you have all images in a single folder, you can pre-process them with:
@@ -284,10 +284,10 @@ We have found on some GPUs that GANgealing training and inference runs faster at
 If our code or models aided your research, please cite our [paper](https://arxiv.org/abs/2112.05143):
 ```bibtex
 @inproceedings{peebles2022gansupervised,
-title={GAN-Supervised Dense Visual Alignment},
-author={William Peebles and Jun-Yan Zhu and Richard Zhang and Antonio Torralba and Alexei Efros and Eli Shechtman},
-booktitle={CVPR},
-year={2022}
+  title={GAN-Supervised Dense Visual Alignment},
+  author={William Peebles and Jun-Yan Zhu and Richard Zhang and Antonio Torralba and Alexei Efros and Eli Shechtman},
+  booktitle={CVPR},
+  year={2022}
 }
 ```
 
